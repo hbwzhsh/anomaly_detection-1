@@ -11,12 +11,30 @@
 #include "desc_info.h"
 #include "options.h"
 #include "diag.h"
+#include "residual.h"
 
 #include <iterator>
 #include <vector>
 
 using namespace std;
 using namespace cv;
+
+void WriteData(Mat& matData)
+{
+    if(matData.empty())
+    {
+        cout<<"Mat empty!"<<endl;
+        return;
+    }
+    for(int r=0; r<matData.rows; ++r)
+    {
+        for(int c=0; c<matData.cols; ++c)
+        {
+            cout<<matData.at<float>(r,c)<<'\t';
+        }
+        cout<<endl;
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +51,7 @@ int main(int argc, char* argv[])
 	DescInfo hogInfo(8, false, nt_cell, opts.HogEnabled);
 
 	TIMERS.Reading.Start();
-	FrameReader rdr(opts.VideoPath, hogInfo.enabled);
+    FrameReader rdr(opts.VideoPath, hogInfo.enabled);
 	TIMERS.Reading.Stop();
 
 	Size frameSizeAfterInterpolation = 
@@ -46,17 +64,19 @@ int main(int argc, char* argv[])
 	log("Frame count:\t%d", rdr.FrameCount);
 	log("Original frame size:\t%dx%d", rdr.OriginalFrameSize.width, rdr.OriginalFrameSize.height);
 	log("Downsampled:\t%dx%d", rdr.DownsampledFrameSize.width, rdr.DownsampledFrameSize.height);
-	log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
+//	log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
 	log("CellSize:\t%d", cellSize);
 
-	HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
- 	buffer.PrintFileHeader();
+    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
+    buffer.PrintFileHeader();
+
+    Residual residual;
 
 	TIMERS.Everything.Start();
-	Mat prevRawImageGray, currentRawImageGray;
+//	Mat prevRawImageGray, currentRawImageGray;
 	while(true)
 	{
-		Frame frame = rdr.Read();
+        Frame frame = rdr.Read();
 		if(frame.PTS == -1)
 			break;
 
@@ -66,29 +86,30 @@ int main(int argc, char* argv[])
 		{
 			TIMERS.DescriptorComputation.Start();
 			
-			if(frame.NoMotionVectors || (hogInfo.enabled && frame.RawImage.empty()))
+            if(frame.NoMotionVectors || (hogInfo.enabled && frame.RawImage.empty()))
 			{
 				TIMERS.SkippedFrames++;
 				continue;
 			}
 
-			frame.Interpolate(frameSizeAfterInterpolation, fscale);
-			buffer.Update(frame);
+            residual.Update(frame);
+            frame.Interpolate(frameSizeAfterInterpolation, fscale);
+            buffer.Update(frame);
 			TIMERS.DescriptorComputation.Stop();
 		
-			if(buffer.AreDescriptorsReady)
-			{
-				for(int k = 0; k < patchSizes.size(); k++)
-				{
-					int blockWidth = patchSizes[k].width / cellSize;
-					int blockHeight = patchSizes[k].height / cellSize;
-					int xStride = opts.Dense ? 1 : blockWidth / 2;
-					int yStride = opts.Dense ? 1 : blockHeight / 2;
-					buffer.PrintFullDescriptor(blockWidth, blockHeight, xStride, yStride);
-				}
-			}
+            if(buffer.AreDescriptorsReady)
+            {
+                for(int k = 0; k < patchSizes.size(); k++)
+                {
+                    int blockWidth = patchSizes[k].width / cellSize;
+                    int blockHeight = patchSizes[k].height / cellSize;
+                    int xStride = opts.Dense ? 1 : blockWidth / 2;
+                    int yStride = opts.Dense ? 1 : blockHeight / 2;
+                    buffer.PrintFullDescriptor(blockWidth, blockHeight, xStride, yStride);
+                }
+            }
 		}
 	}
-	TIMERS.Everything.Stop();
+//	TIMERS.Everything.Stop();
 	TIMERS.Print(rdr.FrameCount);
  }

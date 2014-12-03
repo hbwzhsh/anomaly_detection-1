@@ -38,14 +38,14 @@ struct Options
 
 	void Explain()
 	{
-		log("Options:");
-		log("Input video: %s", VideoPath.c_str());
-		log("HOG's enabled: %s", yesno(HogEnabled));
-		log("HOF's enabled: %s", yesno(HofEnabled));
-		log("MBH's enabled: %s", yesno(MbhEnabled));
+        log("Options:");
+        log("Input video: %s", VideoPath.c_str());
+        log("HOG's enabled: %s", yesno(HogEnabled));
+        log("HOF's enabled: %s", yesno(HofEnabled));
+        log("MBH's enabled: %s", yesno(MbhEnabled));
 
-		log("Dense-dense-revolution: %s", yesno(Dense));
-		log("Interpolation: %s", yesno(Interpolation));
+        log("Dense-dense-revolution: %s", yesno(Dense));
+        log("Interpolation: %s", yesno(Interpolation));
 		fprintf(stderr, "Good PTS: ");
 		for(int i = 0; i < GoodPts.size(); i++)
 			fprintf(stderr, "%d, ", GoodPts[i]);
@@ -85,11 +85,11 @@ struct Options
 
 	void SetDefaults()
 	{
-		HogEnabled = true;
-		HofEnabled = true;
-		MbhEnabled = true;
+        HogEnabled = true;
+        HofEnabled = false;//true;
+        MbhEnabled = false;//true;
 		Dense = false;
-		Interpolation = true;
+        Interpolation = true;
 	}
 
 	void Check()

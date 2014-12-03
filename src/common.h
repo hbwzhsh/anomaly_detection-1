@@ -18,6 +18,7 @@ struct Frame
 {
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
+    Mat rsd;
 	Mat_<bool> Missing;
 	Mat RawImage;
 	int FrameIndex;
@@ -46,6 +47,11 @@ struct Frame
 			TIMERS.InterpolationHOFMBH.Start();
 			Dx = InterpolateFrom16to8(Dx, afterInterpolation, fscale);
 			Dy = InterpolateFrom16to8(Dy, afterInterpolation, fscale);
+//            if(!rsd.empty())
+//            {
+//                rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
+//            }
+            rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{

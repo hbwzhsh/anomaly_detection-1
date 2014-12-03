@@ -15,7 +15,8 @@ HEADERS += \
     frame_reader.h \
     diag.h \
     desc_info.h \
-    common.h
+    common.h \
+    residual.h
 
 SOURCES += \
     main.cpp
