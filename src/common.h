@@ -18,7 +18,7 @@ struct Frame
 {
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
-    Mat rsd;
+    Mat rsd;    // residual
 	Mat_<bool> Missing;
 	Mat RawImage;
 	int FrameIndex;

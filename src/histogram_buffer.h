@@ -71,6 +71,7 @@ struct HofMbhBuffer
 	HistogramBuffer hof;
 	HistogramBuffer mbhX;
 	HistogramBuffer mbhY;
+    HistogramBuffer hrog;
 
 	Mat patchDescriptor;
 
@@ -78,14 +79,16 @@ struct HofMbhBuffer
 	float* hof_patchDescriptor;
 	float* mbhX_patchDescriptor;
 	float* mbhY_patchDescriptor;
+    float* hrog_patchDescriptor;
 
-	DescInfo hogInfo, hofInfo, mbhInfo;
+    DescInfo hogInfo, hofInfo, mbhInfo, hrogInfo;
 
-	void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo)
+    void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo, DescInfo& hrogInfo)
 	{
 		int size = (hogInfo.enabled ? hogInfo.fullDim : 0) 
 			+ (hofInfo.enabled ? hofInfo.fullDim : 0)
-			+ (mbhInfo.enabled ? 2*mbhInfo.fullDim : 0);
+            + (mbhInfo.enabled ? 2*mbhInfo.fullDim : 0)
+            + (hrogInfo.enabled ? hrogInfo.fullDim : 0);
 		patchDescriptor.create(1, size, CV_32F);
 		float* begin = patchDescriptor.ptr<float>();
 
@@ -108,12 +111,18 @@ struct HofMbhBuffer
 			mbhY_patchDescriptor = begin + used;
 			used += mbhInfo.fullDim;
 		}
+        if(hrogInfo.enabled)
+        {
+            hrog_patchDescriptor = begin + used;
+            used += hrogInfo.fullDim;
+        }
 	}
 
 	HofMbhBuffer(
 		DescInfo hogInfo, 
 		DescInfo hofInfo, 
 		DescInfo mbhInfo,
+        DescInfo hrogInfo,
 		int ntCells, 
 		int tStride, 
 		Size frameSizeAfterInterpolation, 
@@ -130,18 +139,21 @@ struct HofMbhBuffer
 		mbhX(mbhInfo, tStride),
 		mbhY(mbhInfo, tStride),
 		hog(hogInfo, tStride),
+        hrog(hrogInfo, tStride),
 
 		hog_patchDescriptor(NULL), 
 		hof_patchDescriptor(NULL),
 		mbhX_patchDescriptor(NULL),
 		mbhY_patchDescriptor(NULL),
+        hrog_patchDescriptor(NULL),
 
 		hogInfo(hogInfo),
 		hofInfo(hofInfo),
 		mbhInfo(mbhInfo),
+        hrogInfo(hrogInfo),
 		AreDescriptorsReady(false)
 	{
-		CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo);
+        CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo, hrogInfo);
 	}
 
 	void Update(Frame& frame)
@@ -170,13 +182,23 @@ struct HofMbhBuffer
 		{
 			TIMERS.HogComputation.Start();
             Mat dx, dy;
-//            Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
-//            Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
-            Sobel(frame.rsd, dx, CV_32F, 1, 0, 1);
-            Sobel(frame.rsd, dy, CV_32F, 0, 1, 1);
+            Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
+//            Sobel(frame.rsd, dx, CV_32F, 1, 0, 1);
+//            Sobel(frame.rsd, dy, CV_32F, 0, 1, 1);
 			hog.Update(dx, dy);
 			TIMERS.HogComputation.Stop();
 		}
+
+        if(hrogInfo.enabled)
+        {
+            TIMERS.HrogComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.rsd, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.rsd, dy, CV_32F, 0, 1, 1);
+            hrog.Update(dx, dy);
+            TIMERS.HrogComputation.Stop();
+        }
 
 		effectiveFrameIndices.push_back(frame.PTS);
 		AreDescriptorsReady = false;
@@ -196,12 +218,20 @@ struct HofMbhBuffer
 				mbhY.AddUpCurrentStack();
 				TIMERS.MbhComputation.Stop();
 			}
+
 			if(hogInfo.enabled)
 			{
 				TIMERS.HogComputation.Start();
 				hog.AddUpCurrentStack();
 				TIMERS.HogComputation.Stop();
 			}
+
+            if(hrogInfo.enabled)
+            {
+                TIMERS.HrogComputation.Start();
+                hrog.AddUpCurrentStack();
+                TIMERS.HrogComputation.Stop();
+            }
 
 			AreDescriptorsReady = effectiveFrameIndices.size() >= ntCells * tStride;
 		}
@@ -258,6 +288,12 @@ struct HofMbhBuffer
 			hog.QueryPatchDescriptor(rect, hog_patchDescriptor);
 			TIMERS.HogQuerying.Stop();
 		}
+        if(hrogInfo.enabled)
+        {
+            TIMERS.HrogQuerying.Start();
+            hrog.QueryPatchDescriptor(rect, hrog_patchDescriptor);
+            TIMERS.HrogQuerying.Stop();
+        }
 		TIMERS.DescriptorQuerying.Stop();
 		
 		if(print)

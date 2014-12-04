@@ -30,7 +30,7 @@ const char* yesno(bool b)
 struct Options
 {
 	string VideoPath;
-	bool HogEnabled, HofEnabled, MbhEnabled;
+    bool HogEnabled, HofEnabled, MbhEnabled, HrogEnabled;
 	bool Dense;
 	bool Interpolation;
 
@@ -43,6 +43,7 @@ struct Options
         log("HOG's enabled: %s", yesno(HogEnabled));
         log("HOF's enabled: %s", yesno(HofEnabled));
         log("MBH's enabled: %s", yesno(MbhEnabled));
+        log("HROG's enabled: %s", yesno(HrogEnabled));
 
         log("Dense-dense-revolution: %s", yesno(Dense));
         log("Interpolation: %s", yesno(Interpolation));
@@ -64,6 +65,8 @@ struct Options
 				HofEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-mbh") == 0)
 				MbhEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-hog") == 0)
+                HrogEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-dense") == 0)
 				Dense = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-interpolation") == 0)
@@ -86,8 +89,9 @@ struct Options
 	void SetDefaults()
 	{
         HogEnabled = true;
-        HofEnabled = false;//true;
-        MbhEnabled = false;//true;
+        HofEnabled = true;
+        MbhEnabled = true;
+        HrogEnabled = true;
 		Dense = false;
         Interpolation = true;
 	}

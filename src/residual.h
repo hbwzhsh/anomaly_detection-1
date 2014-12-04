@@ -45,7 +45,6 @@ struct Residual
             preRawImageGray = curRawImageGray;
             firstFlag = false;
             frame.rsd = Mat::ones(frame.Dx.rows, frame.Dx.cols, CV_8UC1);
-//            WriteData(frame.rsd);
             return;
         }
 
@@ -89,23 +88,6 @@ struct Residual
         }
 
         frame.rsd = residual.clone();
-    }
-
-    void WriteData(Mat& matData)
-    {
-        if(matData.empty())
-        {
-            cout<<"Mat empty!"<<endl;
-            return;
-        }
-        for(int r=0; r<matData.rows; ++r)
-        {
-            for(int c=0; c<matData.cols; ++c)
-            {
-                cout<<matData.at<float>(r,c)<<'\t';
-            }
-            cout<<endl;
-        }
     }
 };
 

@@ -19,22 +19,22 @@
 using namespace std;
 using namespace cv;
 
-void WriteData(Mat& matData)
-{
-    if(matData.empty())
-    {
-        cout<<"Mat empty!"<<endl;
-        return;
-    }
-    for(int r=0; r<matData.rows; ++r)
-    {
-        for(int c=0; c<matData.cols; ++c)
-        {
-            cout<<matData.at<float>(r,c)<<'\t';
-        }
-        cout<<endl;
-    }
-}
+//void WriteData(Mat& matData)
+//{
+//    if(matData.empty())
+//    {
+//        cout<<"Mat empty!"<<endl;
+//        return;
+//    }
+//    for(int r=0; r<matData.rows; ++r)
+//    {
+//        for(int c=0; c<matData.cols; ++c)
+//        {
+//            cout<<matData.at<float>(r,c)<<'\t';
+//        }
+//        cout<<endl;
+//    }
+//}
 
 int main(int argc, char* argv[])
 {
@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 	DescInfo hofInfo(8+1, true, nt_cell, opts.HofEnabled);
 	DescInfo mbhInfo(8, false, nt_cell, opts.MbhEnabled);
 	DescInfo hogInfo(8, false, nt_cell, opts.HogEnabled);
+    DescInfo hrogInfo(8, false, nt_cell, opts.HrogEnabled);
 
 	TIMERS.Reading.Start();
     FrameReader rdr(opts.VideoPath, hogInfo.enabled);
@@ -64,16 +65,15 @@ int main(int argc, char* argv[])
 	log("Frame count:\t%d", rdr.FrameCount);
 	log("Original frame size:\t%dx%d", rdr.OriginalFrameSize.width, rdr.OriginalFrameSize.height);
 	log("Downsampled:\t%dx%d", rdr.DownsampledFrameSize.width, rdr.DownsampledFrameSize.height);
-//	log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
+    log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
 	log("CellSize:\t%d", cellSize);
 
-    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
+    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hrogInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
     buffer.PrintFileHeader();
 
     Residual residual;
 
 	TIMERS.Everything.Start();
-//	Mat prevRawImageGray, currentRawImageGray;
 	while(true)
 	{
         Frame frame = rdr.Read();
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		{
 			TIMERS.DescriptorComputation.Start();
 			
-            if(frame.NoMotionVectors || (hogInfo.enabled && frame.RawImage.empty()))
+            if(frame.NoMotionVectors || (hogInfo.enabled && frame.RawImage.empty()) || (hrogInfo.enabled && frame.RawImage.empty()))
 			{
 				TIMERS.SkippedFrames++;
 				continue;
@@ -110,6 +110,6 @@ int main(int argc, char* argv[])
             }
 		}
 	}
-//	TIMERS.Everything.Stop();
+    TIMERS.Everything.Stop();
 	TIMERS.Print(rdr.FrameCount);
  }
