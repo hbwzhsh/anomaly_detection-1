@@ -73,10 +73,13 @@ int main(int argc, char* argv[])
 
     Residual residual;
 
+    unsigned int frame_count = 0;
 	TIMERS.Everything.Start();
 	while(true)
 	{
         Frame frame = rdr.Read();
+        if(frame_count > 300)
+            break;
 		if(frame.PTS == -1)
 			break;
 

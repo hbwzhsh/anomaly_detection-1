@@ -47,7 +47,7 @@ using namespace cv;
 
 struct FrameReader
 {
-	static const int gridStep = 16;
+    static const int gridStep = 16;
 	Size DownsampledFrameSize;
 	Size OriginalFrameSize;
 	int FrameCount;
@@ -240,21 +240,23 @@ struct FrameReader
 
 	void PutMotionVectorInMatrix(MotionVector& mv, Frame& f)
 	{
-		int i_16 = mv.Y / gridStep;
-		int j_16 = mv.X / gridStep;
+//		int i_16 = mv.Y / gridStep;
+//		int j_16 = mv.X / gridStep;
 
-		i_16 = max(0, min(i_16, DownsampledFrameSize.height-1)); 
-		j_16 = max(0, min(j_16, DownsampledFrameSize.width-1));
+//		i_16 = max(0, min(i_16, DownsampledFrameSize.height-1));
+//		j_16 = max(0, min(j_16, DownsampledFrameSize.width-1));
 
-		if(mv.NoMotionVector())
-		{
-			f.Missing(i_16,j_16) = true;
-		}
-		else
-		{
-			f.Dx(i_16, j_16) = mv.Dx;
-			f.Dy(i_16, j_16) = mv.Dy;
-		}
+//		if(mv.NoMotionVector())
+//		{
+//			f.Missing(i_16,j_16) = true;
+//		}
+//		else
+//		{
+//			f.Dx(i_16, j_16) = mv.Dx;
+//			f.Dy(i_16, j_16) = mv.Dy;
+//		}
+
+        f.MvInfo.push_back(mv);
     }
 
 	void InitMotionVector(MotionVector& mv, int sx, int sy, int mx, int my, int dx, int dy, int mb_type)
@@ -326,9 +328,9 @@ struct FrameReader
 		const int quarter_sample = (pCodecCtx->flags & CODEC_FLAG_QPEL) != 0;
 		const int shift = 1 + quarter_sample;
 
-		typedef short DCTELEM;
-		//Mat_<DCTELEM> dct(mb_height*mb_width, 64*6);
-		//memcpy(dct.ptr(), pFrame->dct_coeff, sizeof(DCTELEM)*dct.cols);
+//		typedef short DCTELEM;
+//		Mat_<DCTELEM> dct(mb_height*mb_width, 64*6);
+//		memcpy(dct.ptr(), pFrame->dct_coeff, sizeof(DCTELEM)*dct.cols);
 		MotionVector mv;
 		for (int mb_y = 0; mb_y < mb_height; mb_y++)
 		{

@@ -1,8 +1,11 @@
 #include <cstdio>
 #include "diag.h"
 #include <opencv/cv.h>
+#include <vector>
+#include "motion_vector_file_utils.h"
 
 using namespace cv;
+using namespace std;
 
 #ifndef __COMMON_H__
 #define __COMMON_H__
@@ -25,6 +28,7 @@ struct Frame
 	int64_t PTS;
 	bool NoMotionVectors;
 	char PictType;
+    vector<MotionVector> MvInfo;
 
 	Frame(int frameIndex, Mat dx, Mat dy, Mat missing)
 		: FrameIndex(frameIndex), Dx(dx), Dy(dy), Missing(missing), NoMotionVectors(false), PTS(-1), PictType('?')
