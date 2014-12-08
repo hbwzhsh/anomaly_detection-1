@@ -4,6 +4,7 @@
 #include "common.h"
 #include "log.h"
 #include "frame_reader.h"
+#include <cmath>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv/cv.h>
@@ -52,7 +53,7 @@ struct Residual
         curFrame = frame;
         preRawImageGray = curRawImageGray;
 
-        residual = Mat::zeros(preFrame.Dx.rows, preFrame.Dx.cols, CV_MAKETYPE(curRawImageGray.depth(), curRawImageGray.channels()));
+        residual = Mat::zeros(preFrame.Dx.rows, preFrame.Dx.cols, CV_32FC1);
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_MAKETYPE(curRawImageGray.depth(), curRawImageGray.channels()));
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
@@ -72,8 +73,7 @@ struct Residual
 //                        residualFrame.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)
 //                                = curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
-                        sum += (curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
-                                - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
                     }
                 }
 //                for(int j = 0; j < gridStep; ++j)
@@ -83,7 +83,8 @@ struct Residual
 //                        residualFrame.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i) = sum/(gridStep*gridStep);
 //                    }
 //                }
-                residual.at<int8_t>(blk_j, blk_i) = sum/(gridStep*gridStep);
+//                residual.at<int8_t>(blk_j, blk_i) = sum/(gridStep*gridStep);
+                residual.at<float>(blk_j, blk_i) = (float)sqrt(double(sum));
             }
         }
 
