@@ -54,7 +54,7 @@ struct InteractEnergy
     {
         float distance = CalculateDistance(posX1, posY1, dX1, dY1, posX2, posY2, dX2, dY2);
         float angle = CalculateAngle(dX1, dY1, dX2, dY2);
-        printf("%f, %f\n", distance, angle);
+//        printf("%f, %f\n", distance, angle);
         int w_d;
         int w_a;
 

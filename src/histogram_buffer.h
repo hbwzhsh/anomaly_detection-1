@@ -333,13 +333,13 @@ struct HofMbhBuffer
 		
 		if(print)
 		{
-//			TIMERS.Writing.Start();
-//			PrintPatchDescriptorHeader(rect);
-//			PrintFloatArray(patchDescriptor);
+            TIMERS.Writing.Start();
+            PrintPatchDescriptorHeader(rect);
+            PrintFloatArray(patchDescriptor);
 			
-//			printf("\n");
-//			TIMERS.Writing.Stop();
-			
+            printf("\n");
+            TIMERS.Writing.Stop();
+
 		}
 	}
 
