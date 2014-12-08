@@ -4,6 +4,7 @@
 #include "common.h"
 #include "log.h"
 #include "frame_reader.h"
+#include <cmath>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv/cv.h>
@@ -146,10 +147,12 @@ struct Residual
                 {
                     for(int i = 0; i < gridStep; ++i)
                     {
-                        sum += residualFrame.at<int8_t>(mb_j*gridStep+j, mb_i*gridStep+i);
+//                        sum += residualFrame.at<int8_t>(mb_j*gridStep+j, mb_i*gridStep+i);
+                        sum += pow(float(residualFrame.at<int8_t>(mb_j*gridStep+j, mb_i*gridStep+i)), 2.0);
                     }
                 }
-                residual.at<int8_t>(mb_j, mb_i) = sum/(gridStep*gridStep);
+//                residual.at<int8_t>(mb_j, mb_i) = sum/(gridStep*gridStep);
+                residual.at<int8_t>(mb_j, mb_i) = (int8_t)sqrt(sum);
             }
         }
 
