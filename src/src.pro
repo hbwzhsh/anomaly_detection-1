@@ -16,7 +16,8 @@ HEADERS += \
     diag.h \
     desc_info.h \
     common.h \
-    residual.h
+    residual.h \
+    interaction_energy.h
 
 SOURCES += \
     main.cpp

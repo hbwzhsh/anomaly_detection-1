@@ -72,6 +72,7 @@ struct HofMbhBuffer
 	HistogramBuffer mbhX;
 	HistogramBuffer mbhY;
     HistogramBuffer hrog;
+    HistogramBuffer heog;
 
 	Mat patchDescriptor;
 
@@ -80,15 +81,17 @@ struct HofMbhBuffer
 	float* mbhX_patchDescriptor;
 	float* mbhY_patchDescriptor;
     float* hrog_patchDescriptor;
+    float* heog_patchDescriptor;
 
-    DescInfo hogInfo, hofInfo, mbhInfo, hrogInfo;
+    DescInfo hogInfo, hofInfo, mbhInfo, hrogInfo, heogInfo;
 
-    void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo, DescInfo& hrogInfo)
+    void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo, DescInfo& hrogInfo, DescInfo& heogInfo)
 	{
 		int size = (hogInfo.enabled ? hogInfo.fullDim : 0) 
 			+ (hofInfo.enabled ? hofInfo.fullDim : 0)
             + (mbhInfo.enabled ? 2*mbhInfo.fullDim : 0)
-            + (hrogInfo.enabled ? hrogInfo.fullDim : 0);
+            + (hrogInfo.enabled ? hrogInfo.fullDim : 0)
+            + (heogInfo.enabled ? heogInfo.fullDim : 0);
 		patchDescriptor.create(1, size, CV_32F);
 		float* begin = patchDescriptor.ptr<float>();
 
@@ -116,6 +119,11 @@ struct HofMbhBuffer
             hrog_patchDescriptor = begin + used;
             used += hrogInfo.fullDim;
         }
+        if(heogInfo.enabled)
+        {
+            heog_patchDescriptor = begin + used;
+            used += heogInfo.fullDim;
+        }
 	}
 
 	HofMbhBuffer(
@@ -123,6 +131,7 @@ struct HofMbhBuffer
 		DescInfo hofInfo, 
 		DescInfo mbhInfo,
         DescInfo hrogInfo,
+        DescInfo heogInfo,
 		int ntCells, 
 		int tStride, 
 		Size frameSizeAfterInterpolation, 
@@ -140,20 +149,23 @@ struct HofMbhBuffer
 		mbhY(mbhInfo, tStride),
 		hog(hogInfo, tStride),
         hrog(hrogInfo, tStride),
+        heog(hrogInfo, tStride),
 
 		hog_patchDescriptor(NULL), 
 		hof_patchDescriptor(NULL),
 		mbhX_patchDescriptor(NULL),
 		mbhY_patchDescriptor(NULL),
         hrog_patchDescriptor(NULL),
+        heog_patchDescriptor(NULL),
 
 		hogInfo(hogInfo),
 		hofInfo(hofInfo),
 		mbhInfo(mbhInfo),
         hrogInfo(hrogInfo),
+        heogInfo(heogInfo),
 		AreDescriptorsReady(false)
 	{
-        CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo, hrogInfo);
+        CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo, hrogInfo, heogInfo);
 	}
 
 	void Update(Frame& frame)
@@ -200,6 +212,16 @@ struct HofMbhBuffer
             TIMERS.HrogComputation.Stop();
         }
 
+        if(heogInfo.enabled)
+        {
+            TIMERS.HeogComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.energyMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.energyMap, dy, CV_32F, 0, 1, 1);
+            heog.Update(dx, dy);
+            TIMERS.HrogComputation.Stop();
+        }
+
 		effectiveFrameIndices.push_back(frame.PTS);
 		AreDescriptorsReady = false;
 		if(effectiveFrameIndices.size() % tStride == 0)
@@ -231,6 +253,13 @@ struct HofMbhBuffer
                 TIMERS.HrogComputation.Start();
                 hrog.AddUpCurrentStack();
                 TIMERS.HrogComputation.Stop();
+            }
+
+            if(heogInfo.enabled)
+            {
+                TIMERS.HeogComputation.Start();
+                heog.AddUpCurrentStack();
+                TIMERS.HeogComputation.Stop();
             }
 
 			AreDescriptorsReady = effectiveFrameIndices.size() >= ntCells * tStride;
@@ -294,16 +323,22 @@ struct HofMbhBuffer
             hrog.QueryPatchDescriptor(rect, hrog_patchDescriptor);
             TIMERS.HrogQuerying.Stop();
         }
+        if(heogInfo.enabled)
+        {
+            TIMERS.HeogQuerying.Start();
+            heog.QueryPatchDescriptor(rect, heog_patchDescriptor);
+            TIMERS.HeogQuerying.Stop();
+        }
 		TIMERS.DescriptorQuerying.Stop();
 		
 		if(print)
 		{
-			TIMERS.Writing.Start();
-			PrintPatchDescriptorHeader(rect);
-			PrintFloatArray(patchDescriptor);
+//			TIMERS.Writing.Start();
+//			PrintPatchDescriptorHeader(rect);
+//			PrintFloatArray(patchDescriptor);
 			
-			printf("\n");
-			TIMERS.Writing.Stop();
+//			printf("\n");
+//			TIMERS.Writing.Stop();
 			
 		}
 	}

@@ -12,6 +12,7 @@
 #include "options.h"
 #include "diag.h"
 #include "residual.h"
+#include "interaction_energy.h"
 
 #include <iterator>
 #include <vector>
@@ -50,6 +51,7 @@ int main(int argc, char* argv[])
 	DescInfo mbhInfo(8, false, nt_cell, opts.MbhEnabled);
 	DescInfo hogInfo(8, false, nt_cell, opts.HogEnabled);
     DescInfo hrogInfo(8, false, nt_cell, opts.HrogEnabled);
+    DescInfo heogInfo(8, false, nt_cell, opts.HeogEnabled);
 
 	TIMERS.Reading.Start();
     FrameReader rdr(opts.VideoPath, hogInfo.enabled);
@@ -68,10 +70,11 @@ int main(int argc, char* argv[])
     log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
 	log("CellSize:\t%d", cellSize);
 
-    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hrogInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
+    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hrogInfo, heogInfo,  nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
     buffer.PrintFileHeader();
 
     Residual residual;
+    InteractEnergy energy;
 
 	TIMERS.Everything.Start();
 	while(true)
@@ -93,6 +96,8 @@ int main(int argc, char* argv[])
 			}
 
             residual.Update(frame);
+            energy.Update(frame);
+
             frame.Interpolate(frameSizeAfterInterpolation, fscale);
             buffer.Update(frame);
 			TIMERS.DescriptorComputation.Stop();

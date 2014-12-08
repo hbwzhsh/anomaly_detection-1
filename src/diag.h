@@ -12,6 +12,7 @@ struct Diag
 	Timer HofComputation;
 	Timer MbhComputation;
     Timer HrogComputation;
+    Timer HeogComputation;
 	Timer InterpolationHOFMBH;
 	Timer InterpolationHOG;
     Timer InterpolationHROG;
@@ -23,6 +24,7 @@ struct Diag
 	Timer MbhQuerying;
 	Timer HogQuerying;
     Timer HrogQuerying;
+    Timer HeogQuerying;
 
 	Timer Everything;
 	Timer Reading;
@@ -47,6 +49,7 @@ struct Diag
 		log("IntHist.HOF (sec):\t%.2lf", HofComputation.TotalInSeconds());
 		log("IntHist.MBH (sec):\t%.2lf", MbhComputation.TotalInSeconds());
         log("IntHist.HROG (sec):\t%.2lf", HrogComputation.TotalInSeconds());
+        log("IntHist.HROG (sec):\t%.2lf", HeogComputation.TotalInSeconds());
 		log("Interp.HOG (sec):\t%.2lf", InterpolationHOG.TotalInSeconds());
         log("Interp.HROG (sec):\t%.2lf", InterpolationHROG.TotalInSeconds());
 		
@@ -55,6 +58,7 @@ struct Diag
 		log("Desc.HOF (sec):\t%.2lf", HofQuerying.TotalInSeconds());
 		log("Desc.MBH (sec):\t%.2lf", MbhQuerying.TotalInSeconds());
         log("Desc.HROG (sec):\t%.2lf", HrogQuerying.TotalInSeconds());
+        log("Desc.HROG (sec):\t%.2lf", HeogQuerying.TotalInSeconds());
 
 		log("Writing (sec):\t%.2lf", Writing.TotalInSeconds());
 

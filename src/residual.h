@@ -10,7 +10,7 @@
 
 struct Residual
 {
-    int gridStep;
+    static const int gridStep = 16;
     bool firstFlag;
     Frame preFrame;
     Frame curFrame;
@@ -19,7 +19,11 @@ struct Residual
     Mat residualFrame;
     Mat residual;
 
-    Residual(int gridStep = 16) : gridStep(gridStep), firstFlag(true)
+//    Residual(int gridStep = 16) : gridStep(gridStep), firstFlag(true)
+//    {
+//    }
+
+    Residual() : firstFlag(true)
     {
     }
 
