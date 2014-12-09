@@ -73,7 +73,8 @@ struct Residual
 //                        residualFrame.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)
 //                                = curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
-                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
+//                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
+                        sum += abs(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
                     }
                 }
 //                for(int j = 0; j < gridStep; ++j)
@@ -84,7 +85,8 @@ struct Residual
 //                    }
 //                }
 //                residual.at<int8_t>(blk_j, blk_i) = sum/(gridStep*gridStep);
-                residual.at<float>(blk_j, blk_i) = (float)sqrt(double(sum));
+//                residual.at<float>(blk_j, blk_i) = (float)sqrt(double(sum));
+                residual.at<float>(blk_j, blk_i) = sum/(gridStep*gridStep);
             }
         }
 

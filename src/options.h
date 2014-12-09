@@ -65,7 +65,7 @@ struct Options
 				HofEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-mbh") == 0)
 				MbhEnabled = strcmp(argv[i+1], yes) == 0;
-            else if(strcmp(argv[i], "-hog") == 0)
+            else if(strcmp(argv[i], "-hrog") == 0)
                 HrogEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-dense") == 0)
 				Dense = strcmp(argv[i+1], yes) == 0;
