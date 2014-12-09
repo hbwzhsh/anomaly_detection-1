@@ -74,7 +74,12 @@ struct Residual
 //                                = curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
 //                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
-                        sum += abs(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                        int diff = abs(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                        if(diff < 8)
+                        {
+                            diff = 0;
+                        }
+                        sum += diff;
                     }
                 }
 //                for(int j = 0; j < gridStep; ++j)
