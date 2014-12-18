@@ -19,6 +19,8 @@ struct Frame
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
     Mat rsd;    // residual
+    Mat_<float> Gx;
+    Mat_<float> Gy;
 	Mat_<bool> Missing;
 	Mat RawImage;
 	int FrameIndex;
@@ -51,7 +53,7 @@ struct Frame
 //            {
 //                rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
 //            }
-            rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
+//            rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{
