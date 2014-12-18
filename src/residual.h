@@ -11,6 +11,7 @@
 struct Residual
 {
     static const int gridStep = 16;
+    static const int dctGridStep = 8;
     bool firstFlag;
     Frame preFrame;
     Frame curFrame;
@@ -45,7 +46,7 @@ struct Residual
             preRawImageGray = curRawImageGray;
             firstFlag = false;
 //            frame.rsd = Mat::ones(frame.Dx.rows, frame.Dx.cols, CV_8UC1);
-            frame.rsd = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_16SC1);
+            frame.rsd = Mat::ones(curRawImageGray.rows, curRawImageGray.cols, CV_8UC1);
             return;
         }
 
@@ -55,7 +56,7 @@ struct Residual
 
 //        residual = Mat::zeros(preFrame.Dx.rows, preFrame.Dx.cols, CV_MAKETYPE(curRawImageGray.depth(), curRawImageGray.channels()));
 //        residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_MAKETYPE(curRawImageGray.depth(), curRawImageGray.channels()));
-        residual = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_16SC1);
+        residual = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_8UC1);
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
@@ -76,7 +77,7 @@ struct Residual
 //                                = curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
                         residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i)
-                                = float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                                = float(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
 //                        sum += (curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
                     }
@@ -85,23 +86,24 @@ struct Residual
             }
         }
 
-        for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
         {
-            for(int blk_i = 0; blk_i < preFrame.Dx.cols; ++blk_i)
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
             {
-                Mat block(gridStep, gridStep, CV_32FC1);
-                Mat trans_block(gridStep, gridStep, CV_16SC1);
+                Mat block(dctGridStep, dctGridStep, CV_32FC1);
+                Mat trans_block(dctGridStep, dctGridStep, CV_32FC1);
+                Mat dct_block(dctGridStep, dctGridStep, CV_8SC1);
 
-                for(int j = 0; j < gridStep; ++j)
-                    for(int i = 0; i < gridStep; ++i)
-                        block.at<float>(j, i) = residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i);
+                for(int j = 0; j < dctGridStep; ++j)
+                    for(int i = 0; i < dctGridStep; ++i)
+                        block.at<float>(j, i) = residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
 
                 dct(block, trans_block);
-                trans_block = Quantize(trans_block);
+                dct_block = Quantize(trans_block);
 
-                for(int j = 0; j < gridStep; ++j)
-                    for(int i = 0; i < gridStep; ++i)
-                        residual.at<int16_t>(blk_j*gridStep+j, blk_i*gridStep+i) = trans_block.at<int16_t>(j, i);
+                for(int j = 0; j < dctGridStep; ++j)
+                    for(int i = 0; i < dctGridStep; ++i)
+                        residual.at<u_int8_t>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<u_int8_t>(j, i);
             }
         }
 
@@ -110,17 +112,18 @@ struct Residual
 
     Mat Quantize(const Mat& src)
     {
-        Mat dst(src.rows, src.cols, CV_16SC1);
+        Mat dst(src.rows, src.cols, CV_8UC1);
         for(int j = 0; j < src.rows; ++j)
         {
             for(int i = 0; i < src.cols; ++i)
             {
-                if(src.at<float>(j, i) < 0)
-                    dst.at<int16_t>(j, i) = 0;
-                else if(src.at<float>(j, i) > 255.0)
-                    dst.at<int16_t>(j, i) = 255;
+                if(src.at<float>(j, i) < 2.0)
+                    dst.at<u_int8_t>(j, i) = 0;
+                else if(src.at<float>(j, i) > 127.0)
+                    dst.at<u_int8_t>(j, i) = 127;
                 else
-                    dst.at<int16_t>(j, i) = int16_t(src.at<float>(j, i));
+                    dst.at<u_int8_t>(j, i) = int16_t(src.at<float>(j, i));
+//                dst.at<int8_t>(j, i) = int8_t(src.at<float>(j, i));
             }
         }
         return dst;
