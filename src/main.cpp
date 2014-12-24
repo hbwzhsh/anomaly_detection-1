@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 	DescInfo hofInfo(8+1, true, nt_cell, opts.HofEnabled);
 	DescInfo mbhInfo(8, false, nt_cell, opts.MbhEnabled);
 	DescInfo hogInfo(8, false, nt_cell, opts.HogEnabled);
+    DescInfo hoaInfo(8+1, true, nt_cell, opts.HoaEnabled);
 
 	TIMERS.Reading.Start();
 	FrameReader rdr(opts.VideoPath, hogInfo.enabled);
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
 	log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
 	log("CellSize:\t%d", cellSize);
 
-	HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
+    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hoaInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
  	buffer.PrintFileHeader();
 
 	TIMERS.Everything.Start();

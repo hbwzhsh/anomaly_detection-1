@@ -17,22 +17,25 @@ struct AccelerationReader
     deque< Mat_<float> > MvStackY;
     Mat_<float> Ax;
     Mat_<float> Ay;
+    bool firstFlag;
 
     AccelerationReader()
         :
-          iInterval(1),
-          iFrameNum(iInterval+2)
+          iInterval(0),
+          iFrameNum(iInterval+2),
+          firstFlag(true)
     {
     }
 
     AccelerationReader(int Interval)
         :
           iInterval(Interval),
-          iFrameNum(iInterval+2)
+          iFrameNum(iInterval+2),
+          firstFlag(true)
     {
     }
 
-    bool Update(Frame& f)
+    void Update(Frame& f)
     {
         if(MvStackX.size() >= iFrameNum)
         {
@@ -43,13 +46,20 @@ struct AccelerationReader
         MvStackX.push_back(f.Dx);
         MvStackY.push_back(f.Dy);
 
+        if(firstFlag)
+        {
+            f.Ax = Mat_<float>::zeros(f.Dx.rows, f.Dx.cols);
+            f.Ax = Mat_<float>::zeros(f.Dx.rows, f.Dx.cols);
+            firstFlag = false;
+            return;
+        }
+
         if(MvStackX.size() == iFrameNum)
         {
             ComputeAcceleration();
-            return true;
+            f.Ax = Ax.clone();
+            f.Ay = Ay.clone();
         }
-
-        return false;
     }
 
     void ComputeAcceleration()

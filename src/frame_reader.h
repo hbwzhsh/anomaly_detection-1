@@ -452,7 +452,7 @@ struct FrameReader
 	Frame Read()
 	{
 		TIMERS.ReadingAndDecoding.Start();
-		Frame res(frameIndex, Mat_<float>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize), Mat_<bool>::zeros(DownsampledFrameSize));
+        Frame res(frameIndex, Mat_<float>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize), Mat_<bool>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize));
 		res.RawImage = Mat(OriginalFrameSize, CV_8UC3);
 
 		bool read = GetNextFrame();
