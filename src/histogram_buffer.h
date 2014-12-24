@@ -70,7 +70,8 @@ struct HofMbhBuffer
 	HistogramBuffer hof;
 	HistogramBuffer mbhX;
 	HistogramBuffer mbhY;
-    HistogramBuffer hoa;
+    HistogramBuffer hoaX;
+    HistogramBuffer hoaY;
 
 	Mat patchDescriptor;
 
@@ -78,7 +79,8 @@ struct HofMbhBuffer
 	float* hof_patchDescriptor;
 	float* mbhX_patchDescriptor;
 	float* mbhY_patchDescriptor;
-    float* hoa_patchDescriptor;
+    float* hoaX_patchDescriptor;
+    float* hoaY_patchDescriptor;
 
     DescInfo hogInfo, hofInfo, mbhInfo, hoaInfo;
 
@@ -87,7 +89,7 @@ struct HofMbhBuffer
 		int size = (hogInfo.enabled ? hogInfo.fullDim : 0) 
 			+ (hofInfo.enabled ? hofInfo.fullDim : 0)
             + (mbhInfo.enabled ? 2*mbhInfo.fullDim : 0)
-            + (hoaInfo.enabled ? hoaInfo.fullDim : 0);
+            + (hoaInfo.enabled ? 2*hoaInfo.fullDim : 0);
 		patchDescriptor.create(1, size, CV_32F);
 		float* begin = patchDescriptor.ptr<float>();
 
@@ -112,7 +114,8 @@ struct HofMbhBuffer
 		}
         if(hoaInfo.enabled)
         {
-            hoa_patchDescriptor = begin + used;
+            hoaX_patchDescriptor = begin + used;
+            hoaY_patchDescriptor = begin + used;
             used += hoaInfo.fullDim;
         }
 	}
@@ -138,13 +141,15 @@ struct HofMbhBuffer
 		mbhX(mbhInfo, tStride),
 		mbhY(mbhInfo, tStride),
 		hog(hogInfo, tStride),
-        hoa(hoaInfo, tStride),
+        hoaX(hoaInfo, tStride),
+        hoaY(hoaInfo, tStride),
 
 		hog_patchDescriptor(NULL), 
 		hof_patchDescriptor(NULL),
 		mbhX_patchDescriptor(NULL),
 		mbhY_patchDescriptor(NULL),
-        hoa_patchDescriptor(NULL),
+        hoaX_patchDescriptor(NULL),
+        hoaY_patchDescriptor(NULL),
 
 		hogInfo(hogInfo),
 		hofInfo(hofInfo),
@@ -189,7 +194,13 @@ struct HofMbhBuffer
 
         if(hoaInfo.enabled)
         {
-            hoa.Update(frame.Ax, frame.Ay);
+            Mat flowXdX, flowXdY, flowYdX, flowYdY;
+            Sobel(frame.Ax, flowXdX, CV_32F, 1, 0, 1);
+            Sobel(frame.Ax, flowXdY, CV_32F, 0, 1, 1);
+            Sobel(frame.Ay, flowYdX, CV_32F, 1, 0, 1);
+            Sobel(frame.Ay, flowYdY, CV_32F, 0, 1, 1);
+            hoaX.Update(flowXdX, flowXdY);
+            hoaY.Update(flowYdX, flowYdY);
         }
 
 		effectiveFrameIndices.push_back(frame.PTS);
@@ -218,7 +229,8 @@ struct HofMbhBuffer
 			}
             if(hoaInfo.enabled)
             {
-                hoa.AddUpCurrentStack();
+                hoaX.AddUpCurrentStack();
+                hoaY.AddUpCurrentStack();
             }
 
 			AreDescriptorsReady = effectiveFrameIndices.size() >= ntCells * tStride;
@@ -278,7 +290,8 @@ struct HofMbhBuffer
 		}
         if(hoaInfo.enabled)
         {
-            hoa.QueryPatchDescriptor(rect, hoa_patchDescriptor);
+            hoaX.QueryPatchDescriptor(rect, hoaX_patchDescriptor);
+            hoaY.QueryPatchDescriptor(rect, hoaY_patchDescriptor);
         }
 		TIMERS.DescriptorQuerying.Stop();
 		
