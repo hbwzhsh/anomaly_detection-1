@@ -238,13 +238,15 @@ struct FrameReader
 		return got_frame > 0;
 	}
 
-	void PutMotionVectorInMatrix(MotionVector& mv, Frame& f)
+    void PutMotionVectorInMatrix(MotionVector& mv, int8_t qp, Frame& f)
 	{
 		int i_16 = mv.Y / gridStep;
 		int j_16 = mv.X / gridStep;
 
 		i_16 = max(0, min(i_16, DownsampledFrameSize.height-1)); 
 		j_16 = max(0, min(j_16, DownsampledFrameSize.width-1));
+
+        f.Qp(i_16, j_16) = qp;
 
 		if(mv.NoMotionVector())
 		{
@@ -366,6 +368,8 @@ struct FrameReader
 						int dx = NO_MV;
 						int dy = NO_MV;
 
+                        int8_t qp = 0;
+
 						if (IS_8X8(pFrame->mb_type[mb_index]))
 						{
 							for (int i = 0; i < 4; i++)
@@ -379,7 +383,8 @@ struct FrameReader
 									dy = (pFrame->motion_val[direction][xy][1]>>shift);
 								}
 								InitMotionVector(mv, sx, sy, mb_x, mb_y, dx, dy, pFrame->mb_type[mb_index]);
-								PutMotionVectorInMatrix(mv, f);
+                                qp = float(pFrame->qscale_table[mb_index]);
+                                PutMotionVectorInMatrix(mv, qp, f);
 							}
 						}
 						else if (IS_16X8(pFrame->mb_type[mb_index]))
@@ -397,9 +402,9 @@ struct FrameReader
 									if (IS_INTERLACED(pFrame->mb_type[mb_index]))
 										dy *= 2;
 								}
-
 								InitMotionVector(mv, sx, sy, mb_x, mb_y, dx, dy, pFrame->mb_type[mb_index]);
-								PutMotionVectorInMatrix(mv, f);
+                                qp = float(pFrame->qscale_table[mb_index]);
+                                PutMotionVectorInMatrix(mv, qp, f);
 							}
 						}
 						else if (IS_8X16(pFrame->mb_type[mb_index]))
@@ -418,7 +423,8 @@ struct FrameReader
 										dy *= 2;
 								}
 								InitMotionVector(mv, sx, sy, mb_x, mb_y, dx, dy, pFrame->mb_type[mb_index]);
-								PutMotionVectorInMatrix(mv, f);
+                                qp = float(pFrame->qscale_table[mb_index]);
+                                PutMotionVectorInMatrix(mv, qp, f);
 							}
 						}
 						else
@@ -432,7 +438,8 @@ struct FrameReader
 								dy = (pFrame->motion_val[direction][xy][1]>>shift);
 							}
 							InitMotionVector(mv, sx, sy, mb_x, mb_y, dx, dy, pFrame->mb_type[mb_index]);
-							PutMotionVectorInMatrix(mv, f);
+                            qp = float(pFrame->qscale_table[mb_index]);
+                            PutMotionVectorInMatrix(mv, qp, f);
 						}
 					}
 				}
@@ -452,7 +459,7 @@ struct FrameReader
 	Frame Read()
 	{
 		TIMERS.ReadingAndDecoding.Start();
-		Frame res(frameIndex, Mat_<float>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize), Mat_<bool>::zeros(DownsampledFrameSize));
+        Frame res(frameIndex, Mat_<float>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize), Mat_<bool>::zeros(DownsampledFrameSize), Mat_<float>::zeros(DownsampledFrameSize));
 		res.RawImage = Mat(OriginalFrameSize, CV_8UC3);
 
 		bool read = GetNextFrame();

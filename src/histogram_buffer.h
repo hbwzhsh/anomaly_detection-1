@@ -169,8 +169,10 @@ struct HofMbhBuffer
 		{
 			TIMERS.HogComputation.Start();
 			Mat dx, dy;
-			Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
-			Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
+//			Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
+//			Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
+            Sobel(frame.Qp, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.Qp, dy, CV_32F, 0, 1, 1);
 			hog.Update(dx, dy);
 			TIMERS.HogComputation.Stop();
 		}

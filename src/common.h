@@ -19,14 +19,15 @@ struct Frame
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
 	Mat_<bool> Missing;
+    Mat_<float> Qp;
 	Mat RawImage;
 	int FrameIndex;
 	int64_t PTS;
 	bool NoMotionVectors;
 	char PictType;
 
-	Frame(int frameIndex, Mat dx, Mat dy, Mat missing)
-		: FrameIndex(frameIndex), Dx(dx), Dy(dy), Missing(missing), NoMotionVectors(false), PTS(-1), PictType('?')
+    Frame(int frameIndex, Mat dx, Mat dy, Mat qp, Mat missing)
+        : FrameIndex(frameIndex), Dx(dx), Dy(dy), Missing(missing), Qp(qp), NoMotionVectors(false), PTS(-1), PictType('?')
 	{
 	}
 
@@ -46,6 +47,7 @@ struct Frame
 			TIMERS.InterpolationHOFMBH.Start();
 			Dx = InterpolateFrom16to8(Dx, afterInterpolation, fscale);
 			Dy = InterpolateFrom16to8(Dy, afterInterpolation, fscale);
+            Qp = InterpolateFrom16to8(Qp, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{
