@@ -12,6 +12,7 @@
 struct Residual
 {
     static const int gridStep = 16;
+    static const int dctGridStep = 8;
     bool firstFlag;
     Frame preFrame;
     Frame curFrame;
@@ -49,11 +50,11 @@ struct Residual
             preFrame = curFrame = frame;
             preRawImageGray = curRawImageGray;
             firstFlag = false;
-            frame.rsd = Mat::zeros(mb_height, mb_width, CV_32FC1);
+            frame.rsd = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
             return;
         }
 
-        residual = Mat::zeros(mb_height, mb_width, CV_32FC1);
+        residual = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
 
         for(vector<MotionVector>::const_iterator iter = frame.MvInfo.begin(); iter != frame.MvInfo.end(); ++iter)
@@ -68,6 +69,8 @@ struct Residual
                 int curr_y = mv.Y - 4;
                 int next_x = curr_x + mv.Dx;
                 int next_y = curr_y + mv.Dy;
+                next_x = max(0, min(next_x, curRawImageGray.cols));
+                next_y = max(0, min(next_y, curRawImageGray.rows));
                 for(int j = 0; j < 8; ++j)
                 {
                     for(int i = 0; i < 8; ++i)
@@ -83,6 +86,8 @@ struct Residual
                 int curr_y = mv.Y - 4;
                 int next_x = curr_x + mv.Dx;
                 int next_y = curr_y + mv.Dy;
+                next_x = max(0, min(next_x, curRawImageGray.cols));
+                next_y = max(0, min(next_y, curRawImageGray.rows));
                 for(int j = 0; j < 8; ++j)
                 {
                     for(int i = 0; i < 16; ++i)
@@ -98,6 +103,8 @@ struct Residual
                 int curr_y = mv.Y - 8;
                 int next_x = curr_x + mv.Dx;
                 int next_y = curr_y + mv.Dy;
+                next_x = max(0, min(next_x, curRawImageGray.cols));
+                next_y = max(0, min(next_y, curRawImageGray.rows));
                 for(int j = 0; j < 16; ++j)
                 {
                     for(int i = 0; i < 8; ++i)
@@ -113,6 +120,8 @@ struct Residual
                 int curr_y = mv.Y - 8;
                 int next_x = curr_x + mv.Dx;
                 int next_y = curr_y + mv.Dy;
+                next_x = max(0, min(next_x, curRawImageGray.cols));
+                next_y = max(0, min(next_y, curRawImageGray.rows));
                 for(int j = 0; j < 16; ++j)
                 {
                     for(int i = 0; i < 16; ++i)
@@ -131,28 +140,46 @@ struct Residual
             }
         }
 
-        for(int mb_j = 0; mb_j < mb_height; ++mb_j)
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
         {
-            for(int mb_i = 0; mb_i < mb_width; ++mb_i)
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
             {
-                float sum = 0;
-                for(int j = 0; j < gridStep; ++j)
-                {
-                    for(int i = 0; i < gridStep; ++i)
-                    {
-                        sum += residualFrame.at<float>(mb_j*gridStep+j, mb_i*gridStep+i);
-//                        sum += pow(float(residualFrame.at<int8_t>(mb_j*gridStep+j, mb_i*gridStep+i)), 2.0);
-                    }
-                }
-                residual.at<float>(mb_j, mb_i) = sum/(gridStep*gridStep);
-//                residual.at<int8_t>(mb_j, mb_i) = (int8_t)sqrt(sum);
+                Mat block(dctGridStep, dctGridStep, CV_32FC1);
+                Mat trans_block(dctGridStep, dctGridStep, CV_32FC1);
+                Mat dct_block(dctGridStep, dctGridStep, CV_32FC1);
+
+                for(int j = 0; j < dctGridStep; ++j)
+                    for(int i = 0; i < dctGridStep; ++i)
+                        block.at<float>(j, i) = residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+
+                dct(block, trans_block);
+                dct_block = Quantize(trans_block);
+
+                for(int j = 0; j < dctGridStep; ++j)
+                    for(int i = 0; i < dctGridStep; ++i)
+                        residual.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<float>(j, i);
             }
         }
+
+//        subtract(curRawImageGray, preRawImageGray, residual);
 
         frame.rsd = residual.clone();
 
         preFrame = curFrame;
         preRawImageGray = curRawImageGray;
+    }
+
+    Mat Quantize(const Mat& src)
+    {
+        Mat dst(src.rows, src.cols, CV_32FC1);
+        for(int j = 0; j < src.rows; ++j)
+        {
+            for(int i = 0; i < src.cols; ++i)
+            {
+                dst.at<float>(j, i) = round(src.at<float>(j, i));
+            }
+        }
+        return dst;
     }
 };
 
