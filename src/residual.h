@@ -39,22 +39,19 @@ struct Residual
         {
             curRawImageGray = frame.RawImage;
         }
+        curFrame = frame;
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
             preRawImageGray = curRawImageGray;
             firstFlag = false;
-            frame.rsd = Mat::ones(frame.Dx.rows, frame.Dx.cols, CV_8UC1);
+            frame.rsd = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
             return;
         }
 
-        preFrame = curFrame;
-        curFrame = frame;
-        preRawImageGray = curRawImageGray;
-
         residual = Mat::zeros(preFrame.Dx.rows, preFrame.Dx.cols, CV_32FC1);
-        residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_MAKETYPE(curRawImageGray.depth(), curRawImageGray.channels()));
+        residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
         {
@@ -74,8 +71,8 @@ struct Residual
 //                                = curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
 //                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
-                        int diff = abs(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-                        if(diff < 8)
+                        int diff = abs(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                        if(diff < 5)
                         {
                             diff = 0;
                         }
@@ -91,11 +88,14 @@ struct Residual
 //                }
 //                residual.at<int8_t>(blk_j, blk_i) = sum/(gridStep*gridStep);
 //                residual.at<float>(blk_j, blk_i) = (float)sqrt(double(sum));
-                residual.at<float>(blk_j, blk_i) = sum/(gridStep*gridStep);
+                residual.at<float>(blk_j, blk_i) = (float(sum))/(float(gridStep*gridStep));
             }
         }
 
         frame.rsd = residual.clone();
+
+        preFrame = curFrame;
+        preRawImageGray = curRawImageGray;
     }
 };
 
