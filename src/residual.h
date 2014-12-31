@@ -36,14 +36,14 @@ struct Residual
         }
         else
         {
-            curRawImageGray = frame.RawImage;
+            curRawImageGray = frame.RawImage.clone();
         }
         curFrame = frame;
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
-            preRawImageGray = curRawImageGray;
+            preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
             frame.rsd = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
             return;
@@ -75,7 +75,7 @@ struct Residual
         frame.rsd = residualFrame.clone();
 
         preFrame = curFrame;
-        preRawImageGray = curRawImageGray;
+        preRawImageGray = curRawImageGray.clone();
     }
 };
 
