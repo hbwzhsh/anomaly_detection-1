@@ -161,7 +161,8 @@ struct HofMbhBuffer
 		if(hofInfo.enabled)
 		{
 			TIMERS.HofComputation.Start();
-			hof.Update(frame.Dx, frame.Dy);
+//			hof.Update(frame.Dx, frame.Dy);
+            hof.Update(frame.foregroundDx, frame.foregroundDy);
 			TIMERS.HofComputation.Stop();
 		}
 
