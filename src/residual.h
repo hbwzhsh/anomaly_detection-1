@@ -37,14 +37,14 @@ struct Residual
         }
         else
         {
-            curRawImageGray = frame.RawImage;
+            curRawImageGray = frame.RawImage.clone();
         }
         curFrame = frame;
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
-            preRawImageGray = curRawImageGray;
+            preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
             frame.rsd = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
             return;
@@ -72,7 +72,7 @@ struct Residual
 //                                    - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i);
 //                        sum += pow(float(curRawImageGray.at<int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<int8_t>(blk_j*gridStep+j, blk_i*gridStep+i)), 2.0);
                         int diff = abs(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-                        if(diff < 5)
+                        if(diff < 3)
                         {
                             diff = 0;
                         }
@@ -95,7 +95,7 @@ struct Residual
         frame.rsd = residual.clone();
 
         preFrame = curFrame;
-        preRawImageGray = curRawImageGray;
+        preRawImageGray = curRawImageGray.clone();
     }
 };
 
