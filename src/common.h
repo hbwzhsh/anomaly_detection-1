@@ -18,8 +18,11 @@ struct Frame
 {
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
-    Mat rsd;    // residual
 	Mat_<bool> Missing;
+    Mat foregroundFrame;
+    Mat backgroundFrame;
+    Mat_<float> foregroundDx, foregroundDy;
+    Mat_<float> backgroundDx, backgroundDy;
 	Mat RawImage;
 	int FrameIndex;
 	int64_t PTS;
@@ -47,11 +50,10 @@ struct Frame
 			TIMERS.InterpolationHOFMBH.Start();
 			Dx = InterpolateFrom16to8(Dx, afterInterpolation, fscale);
 			Dy = InterpolateFrom16to8(Dy, afterInterpolation, fscale);
-//            if(!rsd.empty())
-//            {
-//                rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
-//            }
-            rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
+            foregroundDx = InterpolateFrom16to8(foregroundDx, afterInterpolation, fscale);
+            foregroundDy = InterpolateFrom16to8(foregroundDy, afterInterpolation, fscale);
+            backgroundDx = InterpolateFrom16to8(backgroundDx, afterInterpolation, fscale);
+            backgroundDy = InterpolateFrom16to8(backgroundDy, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{
