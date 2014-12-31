@@ -37,14 +37,14 @@ struct Residual
         if(frame.RawImage.channels() != 1)
             cvtColor(frame.RawImage, curRawImageGray, CV_BGR2GRAY);
         else
-            curRawImageGray = frame.RawImage;
+            curRawImageGray = frame.RawImage.clone();
 
         curFrame = frame;
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
-            preRawImageGray = curRawImageGray;
+            preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
             frame.foregroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
             frame.backgroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
@@ -79,18 +79,6 @@ struct Residual
                         residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i)
                                 = float(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
                                     - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-//                        float diffVal = float(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i)
-//                                                - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-//                        if(diffVal < resThr)
-//                        {
-//                            foregroundFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) = 0;
-//                            backgroundFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) = flaot(preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-//                        }
-//                        else
-//                        {
-//                            foregroundFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) = flaot(preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
-//                            backgroundFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) = 0;
-//                        }
                     }
                 }
             }
@@ -153,7 +141,7 @@ struct Residual
         frame.backgroundDy = backgroundDy.clone();
 
         preFrame = curFrame;
-        preRawImageGray = curRawImageGray;
+        preRawImageGray = curRawImageGray.clone();
     }
 };
 

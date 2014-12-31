@@ -55,6 +55,9 @@ int main(int argc, char* argv[])
     FrameReader rdr(opts.VideoPath, hogInfo.enabled);
 	TIMERS.Reading.Stop();
 
+    VideoCapture videoCapture(opts.VideoPath);
+    Mat rawImage;
+
 	Size frameSizeAfterInterpolation = 
 		opts.Interpolation
 			? Size(2*rdr.DownsampledFrameSize.width - 1, 2*rdr.DownsampledFrameSize.height - 1)
@@ -77,8 +80,10 @@ int main(int argc, char* argv[])
 	while(true)
 	{
         Frame frame = rdr.Read();
-		if(frame.PTS == -1)
+        videoCapture.operator >>(rawImage);
+        if(frame.PTS == -1 || rawImage.empty())
 			break;
+        frame.RawImage = rawImage;
 
 		log("#read frame pts=%d, mvs=%s, type=%c", frame.PTS, frame.NoMotionVectors ? "no" : "yes", frame.PictType);
 
