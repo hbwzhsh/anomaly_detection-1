@@ -161,8 +161,8 @@ struct HofMbhBuffer
 		if(hofInfo.enabled)
 		{
 			TIMERS.HofComputation.Start();
-//			hof.Update(frame.Dx, frame.Dy);
-            hof.Update(frame.foregroundDx, frame.foregroundDy);
+            hof.Update(frame.Dx, frame.Dy);
+//            hof.Update(frame.backgroundDx, frame.backgroundDy);
 			TIMERS.HofComputation.Stop();
 		}
 
@@ -187,8 +187,10 @@ struct HofMbhBuffer
 		{
 			TIMERS.HogComputation.Start();
             Mat dx, dy;
-            Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
-            Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
+//            Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
+//            Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
+            Sobel(frame.foregroundFrame, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.foregroundFrame, dy, CV_32F, 0, 1, 1);
 			hog.Update(dx, dy);
 			TIMERS.HogComputation.Stop();
 		}
@@ -199,9 +201,9 @@ struct HofMbhBuffer
             Mat dx, dy;
 //            Sobel(frame.foregroundFrame, dx, CV_32F, 1, 0, 1);
 //            Sobel(frame.foregroundFrame, dy, CV_32F, 0, 1, 1);
-//            Sobel(frame.backgroundFrame, dx, CV_32F, 1, 0, 1);
-//            Sobel(frame.backgroundFrame, dy, CV_32F, 0, 1, 1);
-            hrog.Update(frame.backgroundDx, frame.backgroundDy);
+            Sobel(frame.backgroundFrame, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.backgroundFrame, dy, CV_32F, 0, 1, 1);
+            hrog.Update(dx, dy);
             TIMERS.HrogComputation.Stop();
         }
 

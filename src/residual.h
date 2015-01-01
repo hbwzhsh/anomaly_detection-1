@@ -91,15 +91,18 @@ struct Residual
                 if(residualFrame.at<float>(j, i) < resThr)
                 {
                     foregroundFrame.at<float>(j, i) = 0;
-                    backgroundFrame.at<float>(j, i) = residualFrame.at<float>(j, i);
+                    backgroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
                 }
                 else
                 {
-                    foregroundFrame.at<float>(j, i) = residualFrame.at<float>(j, i);
+                    foregroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
                     backgroundFrame.at<float>(j, i) = 0;
                 }
             }
         }
+
+//        imshow("foregroundFrame", foregroundFrame);
+//        waitKey(0);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
         {
@@ -133,8 +136,8 @@ struct Residual
             }
         }
 
-//        frame.foregroundFrame = foregroundFrame.clone();
-//        frame.backgroundFrame = backgroundFrame.clone();
+        frame.foregroundFrame = foregroundFrame.clone();
+        frame.backgroundFrame = backgroundFrame.clone();
         frame.foregroundDx = foregroundDx.clone();
         frame.foregroundDy = foregroundDy.clone();
         frame.backgroundDx = backgroundDx.clone();
