@@ -70,7 +70,10 @@ struct Frame
 			Mat rawImageResized;
             rawImageResized = RawImage.clone();
 //			resize(RawImage, rawImageResized, afterInterpolation);
-			cvtColor(rawImageResized, RawImage, CV_BGR2GRAY);
+            if(rawImageResized.channels() != 1)
+                cvtColor(rawImageResized, RawImage, CV_BGR2GRAY);
+            else
+                RawImage = rawImageResized.clone();
 			TIMERS.InterpolationHOG.Stop();
 		}
 	}

@@ -13,6 +13,7 @@
 #include "options.h"
 #include "diag.h"
 #include "residual.h"
+#include "background_subtract.h"
 
 #include <iterator>
 #include <vector>
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
     HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hrogInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
     buffer.PrintFileHeader();
 
-    Residual residual;
+//    Residual residual;
 
 	TIMERS.Everything.Start();
 	while(true)
@@ -85,9 +86,6 @@ int main(int argc, char* argv[])
         if(frame.PTS == -1 || cap.empty())
 			break;
         frame.RawImage = cap.clone();
-
-//        imshow("", frame.RawImage);
-//        waitKey(10);
 
 		log("#read frame pts=%d, mvs=%s, type=%c", frame.PTS, frame.NoMotionVectors ? "no" : "yes", frame.PictType);
 
@@ -101,10 +99,12 @@ int main(int argc, char* argv[])
 				continue;
 			}
 
-//            WriteData(frame.Dx);
-
-            residual.Update(frame);
+//            residual.Update(frame);
+            frame.RawImage = backgroundSubtract(frame.RawImage, frame.Dx, frame.Dy);
+//            imshow("bkSub", frame.RawImage);
+//            waitKey(0);
             frame.Interpolate(frameSizeAfterInterpolation, fscale);
+
             buffer.Update(frame);
 			TIMERS.DescriptorComputation.Stop();
 		
