@@ -11,7 +11,7 @@
 
 struct Residual
 {
-    static const float resThr = 5.0;
+    static const float resThr = 25.0;
     static const float absThr = 50.0;
     static const int gridStep = 16;
     bool firstFlag;
@@ -39,15 +39,26 @@ struct Residual
         else
             curRawImageGray = frame.RawImage.clone();
 
+//        imshow("frame.RawImage", frame.RawImage);
+//        waitKey(0);
+//        imshow("curRawImageGray", curRawImageGray);
+//        waitKey(0);
+
         curFrame = frame;
+        curFrame.Dx = frame.Dx.clone();
+        curFrame.Dy = frame.Dy.clone();
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
+            curFrame.Dx = frame.Dx.clone();
+            curFrame.Dy = frame.Dy.clone();
+            preFrame.Dx = curFrame.Dx.clone();
+            preFrame.Dy = curFrame.Dy.clone();
             preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
-            frame.foregroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
-            frame.backgroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
+            frame.foregroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_8UC1);
+            frame.backgroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_8UC1);
             frame.foregroundDx = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
             frame.foregroundDy = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
             frame.backgroundDx = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
@@ -56,8 +67,8 @@ struct Residual
         }
 
         residualFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
-        foregroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
-        backgroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
+        foregroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_8UC1);
+        backgroundFrame = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_8UC1);
         foregroundDx = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
         foregroundDy = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
         backgroundDx = Mat_<float>::zeros(frame.Dx.rows, frame.Dx.cols);
@@ -88,20 +99,24 @@ struct Residual
         {
             for(int i = 0; i < residualFrame.cols; ++i)
             {
-                if(residualFrame.at<float>(j, i) < resThr)
+                if((residualFrame.at<float>(j, i) >= 0.0 ? residualFrame.at<float>(j, i) : -residualFrame.at<float>(j, i)) < resThr)
                 {
-                    foregroundFrame.at<float>(j, i) = 0;
-                    backgroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
+                    foregroundFrame.at<u_int8_t>(j, i) = 0;
+//                    backgroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
+                    backgroundFrame.at<u_int8_t>(j, i) = curRawImageGray.at<u_int8_t>(j, i);
                 }
                 else
                 {
-                    foregroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
-                    backgroundFrame.at<float>(j, i) = 0;
+//                    foregroundFrame.at<float>(j, i) = float(curRawImageGray.at<u_int8_t>(j, i));
+                    foregroundFrame.at<u_int8_t>(j, i) = curRawImageGray.at<u_int8_t>(j, i);
+                    backgroundFrame.at<u_int8_t>(j, i) = 0;
                 }
             }
         }
 
 //        imshow("foregroundFrame", foregroundFrame);
+//        waitKey(10);
+//        imshow("backgroundFrame", backgroundFrame);
 //        waitKey(0);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
@@ -117,19 +132,19 @@ struct Residual
                                     residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) : -residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i));
                     }
                 }
-                if(sum/(gridStep*gridStep) < absThr)
+                if(sum/(gridStep*gridStep) < resThr)
                 {
 //                    frame.Dx(blk_j, blk_i) = 0;
 //                    frame.Dy(blk_j, blk_i) = 0;
                     foregroundDx(blk_j, blk_i) = 0;
                     foregroundDy(blk_j, blk_i) = 0;
-                    backgroundDx(blk_j, blk_i) = preFrame.Dx(blk_j, blk_i);
-                    backgroundDy(blk_j, blk_i) = preFrame.Dy(blk_j, blk_i);
+                    backgroundDx(blk_j, blk_i) = frame.Dx(blk_j, blk_i);
+                    backgroundDy(blk_j, blk_i) = frame.Dy(blk_j, blk_i);
                 }
                 else
                 {
-                    foregroundDx(blk_j, blk_i) = preFrame.Dx(blk_j, blk_i);
-                    foregroundDy(blk_j, blk_i) = preFrame.Dy(blk_j, blk_i);
+                    foregroundDx(blk_j, blk_i) = frame.Dx(blk_j, blk_i);
+                    foregroundDy(blk_j, blk_i) = frame.Dy(blk_j, blk_i);
                     backgroundDx(blk_j, blk_i) = 0;
                     backgroundDy(blk_j, blk_i) = 0;
                 }
@@ -144,6 +159,8 @@ struct Residual
         frame.backgroundDy = backgroundDy.clone();
 
         preFrame = curFrame;
+        preFrame.Dx = curFrame.Dx.clone();
+        preFrame.Dy = curFrame.Dy.clone();
         preRawImageGray = curRawImageGray.clone();
     }
 };

@@ -50,10 +50,10 @@ struct Frame
 			TIMERS.InterpolationHOFMBH.Start();
 			Dx = InterpolateFrom16to8(Dx, afterInterpolation, fscale);
 			Dy = InterpolateFrom16to8(Dy, afterInterpolation, fscale);
-            foregroundDx = InterpolateFrom16to8(foregroundDx, afterInterpolation, fscale);
-            foregroundDy = InterpolateFrom16to8(foregroundDy, afterInterpolation, fscale);
-            backgroundDx = InterpolateFrom16to8(backgroundDx, afterInterpolation, fscale);
-            backgroundDy = InterpolateFrom16to8(backgroundDy, afterInterpolation, fscale);
+//            foregroundDx = InterpolateFrom16to8(foregroundDx, afterInterpolation, fscale);
+//            foregroundDy = InterpolateFrom16to8(foregroundDy, afterInterpolation, fscale);
+//            backgroundDx = InterpolateFrom16to8(backgroundDx, afterInterpolation, fscale);
+//            backgroundDy = InterpolateFrom16to8(backgroundDy, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{
@@ -68,7 +68,8 @@ struct Frame
 		{
 			TIMERS.InterpolationHOG.Start();
 			Mat rawImageResized;
-			resize(RawImage, rawImageResized, afterInterpolation);
+            rawImageResized = RawImage.clone();
+//			resize(RawImage, rawImageResized, afterInterpolation);
 			cvtColor(rawImageResized, RawImage, CV_BGR2GRAY);
 			TIMERS.InterpolationHOG.Stop();
 		}
