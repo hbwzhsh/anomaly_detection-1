@@ -105,8 +105,8 @@ struct Residual
             for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
             {
                 float sum = 0;
-                for(int i = 1; i < dctGridStep; ++i)
-                    sum += residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+i);
+                for(int j = 1; j < dctGridStep; ++j)
+                    sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+0);
                 residual.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
             }
 
