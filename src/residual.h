@@ -104,8 +104,12 @@ struct Residual
         {
             for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
             {
-                residual.at<float>(blk_j, blk_i) = residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+0);
+                float sum = 0;
+                for(int i = 1; i < dctGridStep; ++i)
+                    sum += residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+i);
+                residual.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
             }
+
         }
 
         frame.rsd = residual.clone();
