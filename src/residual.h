@@ -27,33 +27,36 @@ struct Residual
     void Update(Frame& frame)
     {
         if(frame.RawImage.empty())
-        {
-            return;
-        }
+                    return;
 
         if(frame.RawImage.channels() != 1)
-        {
             cvtColor(frame.RawImage, curRawImageGray, CV_BGR2GRAY);
-        }
         else
-        {
-            curRawImageGray = frame.RawImage;
-        }
+            curRawImageGray = frame.RawImage.clone();
+
+//        imshow("frame.RawImage", frame.RawImage);
+//        waitKey(0);
+//        imshow("curRawImageGray", curRawImageGray);
+//        waitKey(0);
+
         curFrame = frame;
+        curFrame.Dx = frame.Dx.clone();
+        curFrame.Dy = frame.Dy.clone();
 
         if(firstFlag == true)
         {
             preFrame = curFrame = frame;
-            preRawImageGray = curRawImageGray;
+            curFrame.Dx = frame.Dx.clone();
+            curFrame.Dy = frame.Dy.clone();
+            preFrame.Dx = curFrame.Dx.clone();
+            preFrame.Dy = curFrame.Dy.clone();
+            preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
-            frame.rsd = Mat::zeros(curRawImageGray.rows, curRawImageGray.cols, CV_32FC1);
+            frame.rsd = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
             return;
         }
 
-//        preFrame = curFrame;
-//        preRawImageGray = curRawImageGray;
-
-        residual = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
+        residual = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
@@ -65,7 +68,6 @@ struct Residual
                 next_blk_j = max(0, min(next_blk_j, preFrame.Dx.rows));
                 next_blk_i = max(0, min(next_blk_i, preFrame.Dx.cols));
 
-                int sum = 0;
                 for(int j = 0; j < gridStep; ++j)
                 {
                     for(int i = 0; i < gridStep; ++i)
@@ -94,14 +96,28 @@ struct Residual
 
                 for(int j = 0; j < dctGridStep; ++j)
                     for(int i = 0; i < dctGridStep; ++i)
-                        residual.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<float>(j, i);
+                        residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<float>(j, i);
+            }
+        }
+
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+            {
+                float sum = 0;
+                for(int j = 1; j < dctGridStep; ++j)
+                    for(int i = 1; i < dctGridStep; ++i)
+                        sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                residual.at<float>(blk_j, blk_i) = sum/(dctGridStep*dctGridStep);
             }
         }
 
         frame.rsd = residual.clone();
 
         preFrame = curFrame;
-        preRawImageGray = curRawImageGray;
+        preFrame.Dx = curFrame.Dx.clone();
+        preFrame.Dy = curFrame.Dy.clone();
+        preRawImageGray = curRawImageGray.clone();
     }
 
     Mat Quantize(const Mat& src)
