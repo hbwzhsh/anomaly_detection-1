@@ -34,11 +34,6 @@ struct Residual
         else
             curRawImageGray = frame.RawImage.clone();
 
-//        imshow("frame.RawImage", frame.RawImage);
-//        waitKey(0);
-//        imshow("curRawImageGray", curRawImageGray);
-//        waitKey(0);
-
         curFrame = frame;
         curFrame.Dx = frame.Dx.clone();
         curFrame.Dy = frame.Dy.clone();
@@ -52,12 +47,14 @@ struct Residual
             preFrame.Dy = curFrame.Dy.clone();
             preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
-            frame.rsd = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.rsd = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
             return;
         }
 
-        residual = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        residual = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
+
+//        subtract(curRawImageGray, preRawImageGray, residualFrame);
 
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
         {
@@ -68,45 +65,51 @@ struct Residual
                 next_blk_j = max(0, min(next_blk_j, preFrame.Dx.rows));
                 next_blk_i = max(0, min(next_blk_i, preFrame.Dx.cols));
 
+                int zeroNum = 0;
                 for(int j = 0; j < gridStep; ++j)
                 {
                     for(int i = 0; i < gridStep; ++i)
                     {
                         residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i)
                                 = float(curRawImageGray.at<u_int8_t>(next_blk_j*gridStep+j, next_blk_i*gridStep+i) - preRawImageGray.at<u_int8_t>(blk_j*gridStep+j, blk_i*gridStep+i));
+                        if(residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) == 0)
+                        {
+                            ++zeroNum;
+                        }
                     }
                 }
+                residual.at<float>(blk_j, blk_i) = (float(zeroNum))/(float(gridStep*gridStep));
             }
         }
 
-        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
-        {
-            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
-            {
-                Mat block(dctGridStep, dctGridStep, CV_32FC1);
-                Mat trans_block(dctGridStep, dctGridStep, CV_32FC1);
-                Mat dct_block(dctGridStep, dctGridStep, CV_32FC1);
+//        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+//        {
+//            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+//            {
+//                Mat block(dctGridStep, dctGridStep, CV_32FC1);
+//                Mat trans_block(dctGridStep, dctGridStep, CV_32FC1);
+//                Mat dct_block(dctGridStep, dctGridStep, CV_32FC1);
 
-                for(int j = 0; j < dctGridStep; ++j)
-                    for(int i = 0; i < dctGridStep; ++i)
-                        block.at<float>(j, i) = residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+//                for(int j = 0; j < dctGridStep; ++j)
+//                    for(int i = 0; i < dctGridStep; ++i)
+//                        block.at<float>(j, i) = residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
 
-                dct(block, trans_block);
-                dct_block = Quantize(trans_block);
+//                dct(block, trans_block);
+//                dct_block = Quantize(trans_block);
 
-                for(int j = 0; j < dctGridStep; ++j)
-                    for(int i = 0; i < dctGridStep; ++i)
-                        residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<float>(j, i);
-            }
-        }
+//                for(int j = 0; j < dctGridStep; ++j)
+//                    for(int i = 0; i < dctGridStep; ++i)
+//                        residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i) = dct_block.at<float>(j, i);
+//            }
+//        }
 
-        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
-        {
-            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
-            {
-                residual.at<float>(blk_j, blk_i) = residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+0);
-            }
-        }
+//        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+//        {
+//            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+//            {
+//                residual.at<float>(blk_j, blk_i) = residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+0);
+//            }
+//        }
 
         frame.rsd = residual.clone();
 
