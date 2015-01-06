@@ -49,7 +49,12 @@ int main(int argc, char* argv[])
 	DescInfo hofInfo(8+1, true, nt_cell, opts.HofEnabled);
 	DescInfo mbhInfo(8, false, nt_cell, opts.MbhEnabled);
 	DescInfo hogInfo(8, false, nt_cell, opts.HogEnabled);
-    DescInfo hrogInfo(8, false, nt_cell, opts.HrogEnabled);
+    DescInfo spatialVarianceInfo(8, false, nt_cell, opts.SpatialVarianceEnabled);
+    DescInfo dcInfo(8, false, nt_cell, opts.DcEnabled);
+    DescInfo verticalVarianceInfo(8, false, nt_cell, opts.VerticalVarianceEnabled);
+    DescInfo horizontalVarianceInfo(8, false, nt_cell, opts.HorizontalVarianceEnabled);
+    DescInfo temporalContinuityInfo(8, false, nt_cell, opts.TemporalContinuityEnabled);
+    DescInfo textureInfo(8, false, nt_cell, opts.TextureEnabled);
 
 	TIMERS.Reading.Start();
     FrameReader rdr(opts.VideoPath, hogInfo.enabled);
@@ -71,7 +76,8 @@ int main(int argc, char* argv[])
     log("After interpolation:\t%dx%d", frameSizeAfterInterpolation.width, frameSizeAfterInterpolation.height);
 	log("CellSize:\t%d", cellSize);
 
-    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, hrogInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
+    HofMbhBuffer buffer(hogInfo, hofInfo, mbhInfo, spatialVarianceInfo, dcInfo, verticalVarianceInfo, horizontalVarianceInfo,
+                        temporalContinuityInfo, textureInfo, nt_cell, tStride, frameSizeAfterInterpolation, fscale, true);
     buffer.PrintFileHeader();
 
     Residual residual;
@@ -91,7 +97,7 @@ int main(int argc, char* argv[])
 		{
 			TIMERS.DescriptorComputation.Start();
 			
-            if(frame.NoMotionVectors || (hogInfo.enabled && frame.RawImage.empty()) || (hrogInfo.enabled && frame.RawImage.empty()))
+            if(frame.NoMotionVectors || frame.RawImage.empty())
 			{
 				TIMERS.SkippedFrames++;
 				continue;

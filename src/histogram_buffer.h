@@ -71,7 +71,12 @@ struct HofMbhBuffer
 	HistogramBuffer hof;
 	HistogramBuffer mbhX;
 	HistogramBuffer mbhY;
-    HistogramBuffer hrog;
+    HistogramBuffer spatialVariance;
+    HistogramBuffer dc;
+    HistogramBuffer verticalVariance;
+    HistogramBuffer horizontalVariance;
+    HistogramBuffer temporalContinuity;
+    HistogramBuffer texture;
 
 	Mat patchDescriptor;
 
@@ -79,16 +84,27 @@ struct HofMbhBuffer
 	float* hof_patchDescriptor;
 	float* mbhX_patchDescriptor;
 	float* mbhY_patchDescriptor;
-    float* hrog_patchDescriptor;
+    float* spatialVariance_patchDescriptor;
+    float* dc_patchDescriptor;
+    float* verticalVariance_patchDescriptor;
+    float* horizontalVariance_patchDescriptor;
+    float* temporalContinuity_patchDescriptor;
+    float* texture_patchDescriptor;
 
-    DescInfo hogInfo, hofInfo, mbhInfo, hrogInfo;
+    DescInfo hogInfo, hofInfo, mbhInfo, spatialVarianceInfo, dcInfo, verticalVarianceInfo, horizontalVarianceInfo, temporalContinuityInfo, textureInfo;
 
-    void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo, DescInfo& hrogInfo)
+    void CreatePatchDescriptorPlaceholder(DescInfo& hogInfo, DescInfo& hofInfo, DescInfo& mbhInfo, DescInfo& spatialVarianceInfo, DescInfo& dcInfo,
+                                          DescInfo& verticalVarianceInfo, DescInfo& horizontalVarianceInfo, DescInfo& temporalContinuityInfo, DescInfo& textureInfo)
 	{
 		int size = (hogInfo.enabled ? hogInfo.fullDim : 0) 
 			+ (hofInfo.enabled ? hofInfo.fullDim : 0)
             + (mbhInfo.enabled ? 2*mbhInfo.fullDim : 0)
-            + (hrogInfo.enabled ? hrogInfo.fullDim : 0);
+            + (spatialVarianceInfo.enabled ? spatialVarianceInfo.fullDim : 0)
+            + (dcInfo.enabled ? dcInfo.fullDim : 0)
+            + (verticalVarianceInfo.enabled ? verticalVarianceInfo.fullDim : 0)
+            + (horizontalVarianceInfo.enabled ? horizontalVarianceInfo.fullDim : 0)
+            + (temporalContinuityInfo.enabled ? temporalContinuityInfo.fullDim : 0)
+            + (textureInfo.enabled ? textureInfo.fullDim : 0);
 		patchDescriptor.create(1, size, CV_32F);
 		float* begin = patchDescriptor.ptr<float>();
 
@@ -111,10 +127,35 @@ struct HofMbhBuffer
 			mbhY_patchDescriptor = begin + used;
 			used += mbhInfo.fullDim;
 		}
-        if(hrogInfo.enabled)
+        if(spatialVarianceInfo.enabled)
         {
-            hrog_patchDescriptor = begin + used;
-            used += hrogInfo.fullDim;
+            spatialVariance_patchDescriptor = begin + used;
+            used += spatialVarianceInfo.fullDim;
+        }
+        if(dcInfo.enabled)
+        {
+            dc_patchDescriptor = begin + used;
+            used += dcInfo.fullDim;
+        }
+        if(verticalVarianceInfo.enabled)
+        {
+            verticalVariance_patchDescriptor = begin + used;
+            used += verticalVarianceInfo.fullDim;
+        }
+        if(horizontalVarianceInfo.enabled)
+        {
+            horizontalVariance_patchDescriptor = begin + used;
+            used += horizontalVarianceInfo.fullDim;
+        }
+        if(temporalContinuityInfo.enabled)
+        {
+            temporalContinuity_patchDescriptor = begin + used;
+            used += temporalContinuityInfo.fullDim;
+        }
+        if(textureInfo.enabled)
+        {
+            texture_patchDescriptor = begin + used;
+            used += textureInfo.fullDim;
         }
 	}
 
@@ -122,7 +163,12 @@ struct HofMbhBuffer
 		DescInfo hogInfo, 
 		DescInfo hofInfo, 
 		DescInfo mbhInfo,
-        DescInfo hrogInfo,
+        DescInfo spatialVarianceInfo,
+        DescInfo dcInfo,
+        DescInfo verticalVarianceInfo,
+        DescInfo horizontalVarianceInfo,
+        DescInfo temporalContinuityInfo,
+        DescInfo textureInfo,
 		int ntCells, 
 		int tStride, 
 		Size frameSizeAfterInterpolation, 
@@ -139,21 +185,37 @@ struct HofMbhBuffer
 		mbhX(mbhInfo, tStride),
 		mbhY(mbhInfo, tStride),
 		hog(hogInfo, tStride),
-        hrog(hrogInfo, tStride),
+        spatialVariance(spatialVarianceInfo, tStride),
+        dc(dcInfo, tStride),
+        verticalVariance(verticalVarianceInfo, tStride),
+        horizontalVariance(horizontalVarianceInfo, tStride),
+        temporalContinuity(temporalContinuityInfo, tStride),
+        texture(textureInfo, tStride),
 
 		hog_patchDescriptor(NULL), 
 		hof_patchDescriptor(NULL),
 		mbhX_patchDescriptor(NULL),
 		mbhY_patchDescriptor(NULL),
-        hrog_patchDescriptor(NULL),
+        spatialVariance_patchDescriptor(NULL),
+        dc_patchDescriptor(NULL),
+        verticalVariance_patchDescriptor(NULL),
+        horizontalVariance_patchDescriptor(NULL),
+        temporalContinuity_patchDescriptor(NULL),
+        texture_patchDescriptor(NULL),
 
 		hogInfo(hogInfo),
 		hofInfo(hofInfo),
 		mbhInfo(mbhInfo),
-        hrogInfo(hrogInfo),
+        spatialVarianceInfo(spatialVarianceInfo),
+        dcInfo(dcInfo),
+        verticalVarianceInfo(verticalVarianceInfo),
+        horizontalVarianceInfo(horizontalVarianceInfo),
+        temporalContinuityInfo(temporalContinuityInfo),
+        textureInfo(textureInfo),
 		AreDescriptorsReady(false)
 	{
-        CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo, hrogInfo);
+        CreatePatchDescriptorPlaceholder(hogInfo, hofInfo, mbhInfo, spatialVarianceInfo, dcInfo,
+                                         verticalVarianceInfo, horizontalVarianceInfo, temporalContinuityInfo, textureInfo);
 	}
 
 	void Update(Frame& frame)
@@ -184,20 +246,68 @@ struct HofMbhBuffer
             Mat dx, dy;
             Sobel(frame.RawImage, dx, CV_32F, 1, 0, 1);
             Sobel(frame.RawImage, dy, CV_32F, 0, 1, 1);
-//            Sobel(frame.rsd, dx, CV_32F, 1, 0, 1);
-//            Sobel(frame.rsd, dy, CV_32F, 0, 1, 1);
 			hog.Update(dx, dy);
 			TIMERS.HogComputation.Stop();
 		}
 
-        if(hrogInfo.enabled)
+        if(spatialVarianceInfo.enabled)
         {
-            TIMERS.HrogComputation.Start();
+            TIMERS.SpatialVarianceComputation.Start();
             Mat dx, dy;
-            Sobel(frame.rsd, dx, CV_32F, 1, 0, 1);
-            Sobel(frame.rsd, dy, CV_32F, 0, 1, 1);
-            hrog.Update(dx, dy);
-            TIMERS.HrogComputation.Stop();
+            Sobel(frame.spatialVarianceMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.spatialVarianceMap, dy, CV_32F, 0, 1, 1);
+            spatialVariance.Update(dx, dy);
+            TIMERS.SpatialVarianceComputation.Stop();
+        }
+
+        if(dcInfo.enabled)
+        {
+            TIMERS.DcComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.dcMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.dcMap, dy, CV_32F, 0, 1, 1);
+            dc.Update(dx, dy);
+            TIMERS.DcComputation.Stop();
+        }
+
+        if(verticalVarianceInfo.enabled)
+        {
+            TIMERS.VerticalVarianceComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.verticalVarianceMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.verticalVarianceMap, dy, CV_32F, 0, 1, 1);
+            verticalVariance.Update(dx, dy);
+            TIMERS.VerticalVarianceComputation.Stop();
+        }
+
+        if(horizontalVarianceInfo.enabled)
+        {
+            TIMERS.HorizontalVarianceComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.horizontalVarianceMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.horizontalVarianceMap, dy, CV_32F, 0, 1, 1);
+            horizontalVariance.Update(dx, dy);
+            TIMERS.HorizontalVarianceComputation.Stop();
+        }
+
+        if(temporalContinuityInfo.enabled)
+        {
+            TIMERS.TemporalContinuityComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.temporalContinuityMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.temporalContinuityMap, dy, CV_32F, 0, 1, 1);
+            temporalContinuity.Update(dx, dy);
+            TIMERS.TemporalContinuityComputation.Stop();
+        }
+
+        if(textureInfo.enabled)
+        {
+            TIMERS.TextureComputation.Start();
+            Mat dx, dy;
+            Sobel(frame.textureMap, dx, CV_32F, 1, 0, 1);
+            Sobel(frame.textureMap, dy, CV_32F, 0, 1, 1);
+            texture.Update(dx, dy);
+            TIMERS.TextureComputation.Stop();
         }
 
 		effectiveFrameIndices.push_back(frame.PTS);
@@ -226,11 +336,46 @@ struct HofMbhBuffer
 				TIMERS.HogComputation.Stop();
 			}
 
-            if(hrogInfo.enabled)
+            if(spatialVarianceInfo.enabled)
             {
-                TIMERS.HrogComputation.Start();
-                hrog.AddUpCurrentStack();
-                TIMERS.HrogComputation.Stop();
+                TIMERS.SpatialVarianceComputation.Start();
+                spatialVariance.AddUpCurrentStack();
+                TIMERS.SpatialVarianceComputation.Stop();
+            }
+
+            if(dcInfo.enabled)
+            {
+                TIMERS.DcComputation.Start();
+                dc.AddUpCurrentStack();
+                TIMERS.DcComputation.Stop();
+            }
+
+            if(verticalVarianceInfo.enabled)
+            {
+                TIMERS.VerticalVarianceComputation.Start();
+                verticalVariance.AddUpCurrentStack();
+                TIMERS.VerticalVarianceComputation.Stop();
+            }
+
+            if(horizontalVarianceInfo.enabled)
+            {
+                TIMERS.HorizontalVarianceComputation.Start();
+                horizontalVariance.AddUpCurrentStack();
+                TIMERS.HorizontalVarianceComputation.Stop();
+            }
+
+            if(temporalContinuityInfo.enabled)
+            {
+                TIMERS.TemporalContinuityComputation.Start();
+                temporalContinuity.AddUpCurrentStack();
+                TIMERS.TemporalContinuityComputation.Stop();
+            }
+
+            if(textureInfo.enabled)
+            {
+                TIMERS.TextureComputation.Start();
+                texture.AddUpCurrentStack();
+                TIMERS.TextureComputation.Stop();
             }
 
 			AreDescriptorsReady = effectiveFrameIndices.size() >= ntCells * tStride;
@@ -288,11 +433,41 @@ struct HofMbhBuffer
 			hog.QueryPatchDescriptor(rect, hog_patchDescriptor);
 			TIMERS.HogQuerying.Stop();
 		}
-        if(hrogInfo.enabled)
+        if(spatialVarianceInfo.enabled)
         {
-            TIMERS.HrogQuerying.Start();
-            hrog.QueryPatchDescriptor(rect, hrog_patchDescriptor);
-            TIMERS.HrogQuerying.Stop();
+            TIMERS.SpatialVarianceQuerying.Start();
+            spatialVariance.QueryPatchDescriptor(rect, spatialVariance_patchDescriptor);
+            TIMERS.SpatialVarianceQuerying.Stop();
+        }
+        if(dcInfo.enabled)
+        {
+            TIMERS.DcQuerying.Start();
+            dc.QueryPatchDescriptor(rect, dc_patchDescriptor);
+            TIMERS.DcQuerying.Stop();
+        }
+        if(verticalVarianceInfo.enabled)
+        {
+            TIMERS.VerticalVarianceQuerying.Start();
+            verticalVariance.QueryPatchDescriptor(rect, verticalVariance_patchDescriptor);
+            TIMERS.VerticalVarianceQuerying.Stop();
+        }
+        if(horizontalVarianceInfo.enabled)
+        {
+            TIMERS.HorizontalVarianceQuerying.Start();
+            horizontalVariance.QueryPatchDescriptor(rect, horizontalVariance_patchDescriptor);
+            TIMERS.HorizontalVarianceQuerying.Stop();
+        }
+        if(temporalContinuityInfo.enabled)
+        {
+            TIMERS.TemporalContinuityQuerying.Start();
+            temporalContinuity.QueryPatchDescriptor(rect, temporalContinuity_patchDescriptor);
+            TIMERS.TemporalContinuityQuerying.Stop();
+        }
+        if(textureInfo.enabled)
+        {
+            TIMERS.TextureQuerying.Start();
+            texture.QueryPatchDescriptor(rect, texture_patchDescriptor);
+            TIMERS.TextureQuerying.Stop();
         }
 		TIMERS.DescriptorQuerying.Stop();
 		

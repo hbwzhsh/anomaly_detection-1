@@ -30,7 +30,7 @@ const char* yesno(bool b)
 struct Options
 {
 	string VideoPath;
-    bool HogEnabled, HofEnabled, MbhEnabled, HrogEnabled;
+    bool HogEnabled, HofEnabled, MbhEnabled, SpatialVarianceEnabled, DcEnabled, VerticalVarianceEnabled, HorizontalVarianceEnabled, TemporalContinuityEnabled, TextureEnabled;
 	bool Dense;
 	bool Interpolation;
 
@@ -43,7 +43,12 @@ struct Options
         log("HOG's enabled: %s", yesno(HogEnabled));
         log("HOF's enabled: %s", yesno(HofEnabled));
         log("MBH's enabled: %s", yesno(MbhEnabled));
-        log("HROG's enabled: %s", yesno(HrogEnabled));
+        log("SpatialVariance's enabled: %s", yesno(SpatialVarianceEnabled));
+        log("Dc's enabled: %s", yesno(DcEnabled));
+        log("VerticalVariance's enabled: %s", yesno(VerticalVarianceEnabled));
+        log("HorizontalVariance's enabled: %s", yesno(HorizontalVarianceEnabled));
+        log("TemporalContinuity's enabled: %s", yesno(TemporalContinuityEnabled));
+        log("Texture's enabled: %s", yesno(TextureEnabled));
 
         log("Dense-dense-revolution: %s", yesno(Dense));
         log("Interpolation: %s", yesno(Interpolation));
@@ -65,8 +70,18 @@ struct Options
 				HofEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-mbh") == 0)
 				MbhEnabled = strcmp(argv[i+1], yes) == 0;
-            else if(strcmp(argv[i], "-hrog") == 0)
-                HrogEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-spatial") == 0)
+                SpatialVarianceEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-dc") == 0)
+                DcEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-vertical") == 0)
+                VerticalVarianceEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-horizontal") == 0)
+                HorizontalVarianceEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-temporalContinuity") == 0)
+                TemporalContinuityEnabled = strcmp(argv[i+1], yes) == 0;
+            else if(strcmp(argv[i], "-texture") == 0)
+                TextureEnabled = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-dense") == 0)
 				Dense = strcmp(argv[i+1], yes) == 0;
 			else if(strcmp(argv[i], "-interpolation") == 0)
@@ -91,7 +106,12 @@ struct Options
         HogEnabled = true;
         HofEnabled = true;
         MbhEnabled = true;
-        HrogEnabled = true;
+        SpatialVarianceEnabled = true;
+        DcEnabled = true;
+        VerticalVarianceEnabled = true;
+        HorizontalVarianceEnabled = true;
+        TemporalContinuityEnabled = true;
+        TextureEnabled = true;
 		Dense = false;
         Interpolation = true;
 	}

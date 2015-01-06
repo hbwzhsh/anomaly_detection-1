@@ -11,10 +11,16 @@ struct Diag
 	Timer HogComputation;
 	Timer HofComputation;
 	Timer MbhComputation;
-    Timer HrogComputation;
+    Timer SpatialVarianceComputation;
+    Timer DcComputation;
+    Timer VerticalVarianceComputation;
+    Timer HorizontalVarianceComputation;
+    Timer TemporalContinuityComputation;
+    Timer TextureComputation;
+
 	Timer InterpolationHOFMBH;
 	Timer InterpolationHOG;
-    Timer InterpolationHROG;
+    Timer InterpolationTemporalContinuity;
 
 	Timer DescriptorComputation;
 	Timer DescriptorQuerying;
@@ -22,7 +28,12 @@ struct Diag
 	Timer HofQuerying;
 	Timer MbhQuerying;
 	Timer HogQuerying;
-    Timer HrogQuerying;
+    Timer SpatialVarianceQuerying;
+    Timer DcQuerying;
+    Timer VerticalVarianceQuerying;
+    Timer HorizontalVarianceQuerying;
+    Timer TemporalContinuityQuerying;
+    Timer TextureQuerying;
 
 	Timer Everything;
 	Timer Reading;
@@ -39,22 +50,33 @@ struct Diag
 		log("Reading (sec):\t%.2lf", Reading.TotalInSeconds());
 		log("Decoding (sec):\t%.2lf", ReadingAndDecoding.TotalInSeconds() - Reading.TotalInSeconds());
 
-        log("Interp (sec):\t%.2lf", InterpolationHOFMBH.TotalInSeconds() + InterpolationHOG.TotalInSeconds() + InterpolationHROG.TotalInSeconds());
+        log("Interp (sec):\t%.2lf", InterpolationHOFMBH.TotalInSeconds() + InterpolationHOG.TotalInSeconds() + InterpolationTemporalContinuity.TotalInSeconds());
 		log("Interp.HOFMBH (sec):\t%.2lf", InterpolationHOFMBH.TotalInSeconds());
 		
 		log("IntHist (sec):\t%.2lf", DescriptorComputation.TotalInSeconds());
 		log("IntHist.HOG (sec):\t%.2lf", HogComputation.TotalInSeconds());
 		log("IntHist.HOF (sec):\t%.2lf", HofComputation.TotalInSeconds());
 		log("IntHist.MBH (sec):\t%.2lf", MbhComputation.TotalInSeconds());
-        log("IntHist.HROG (sec):\t%.2lf", HrogComputation.TotalInSeconds());
+        log("IntHist.SpatialVariance (sec):\t%.2lf", SpatialVarianceComputation.TotalInSeconds());
+        log("IntHist.DC (sec):\t%.2lf", DcComputation.TotalInSeconds());
+        log("IntHist.VerticalVariance (sec):\t%.2lf", VerticalVarianceComputation.TotalInSeconds());
+        log("IntHist.HorizontalVariance (sec):\t%.2lf", HorizontalVarianceComputation.TotalInSeconds());
+        log("IntHist.TemporalContinuity (sec):\t%.2lf", TemporalContinuityComputation.TotalInSeconds());
+        log("IntHist.Texture (sec):\t%.2lf", TextureComputation.TotalInSeconds());
+
 		log("Interp.HOG (sec):\t%.2lf", InterpolationHOG.TotalInSeconds());
-        log("Interp.HROG (sec):\t%.2lf", InterpolationHROG.TotalInSeconds());
+        log("Interp.TemporalContinuity (sec):\t%.2lf", InterpolationTemporalContinuity.TotalInSeconds());
 		
 		log("Desc (sec):\t%.2lf", DescriptorQuerying.TotalInSeconds());
 		log("Desc.HOG (sec):\t%.2lf", HogQuerying.TotalInSeconds());
 		log("Desc.HOF (sec):\t%.2lf", HofQuerying.TotalInSeconds());
-		log("Desc.MBH (sec):\t%.2lf", MbhQuerying.TotalInSeconds());
-        log("Desc.HROG (sec):\t%.2lf", HrogQuerying.TotalInSeconds());
+        log("Desc.MBH (sec):\t%.2lf", MbhQuerying.TotalInSeconds());
+        log("Desc.SpatialVariance (sec):\t%.2lf", SpatialVarianceQuerying.TotalInSeconds());
+        log("Desc.DC (sec):\t%.2lf", DcQuerying.TotalInSeconds());
+        log("Desc.VerticalVariance (sec):\t%.2lf", VerticalVarianceQuerying.TotalInSeconds());
+        log("Desc.HorizontalVariance (sec):\t%.2lf", HorizontalVarianceQuerying.TotalInSeconds());
+        log("Desc.TemporalContinuity (sec):\t%.2lf", TemporalContinuityQuerying.TotalInSeconds());
+        log("Desc.Texture (sec):\t%.2lf", TextureQuerying.TotalInSeconds());
 
 		log("Writing (sec):\t%.2lf", Writing.TotalInSeconds());
 

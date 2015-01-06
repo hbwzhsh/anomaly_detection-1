@@ -12,13 +12,19 @@ struct Residual
 {
     static const int gridStep = 16;
     static const int dctGridStep = 8;
+    static const int ac_topleft_num = 9;
     bool firstFlag;
     Frame preFrame;
     Frame curFrame;
     Mat preRawImageGray;
     Mat curRawImageGray;
     Mat residualFrame;
-    Mat residual;
+    Mat spatialVarianceMap;
+    Mat dcMap;
+    Mat verticalVarianceMap;
+    Mat horizontalVarianceMap;
+    Mat temporalContinuityMap;
+    Mat textureMap;
 
     Residual() : firstFlag(true)
     {
@@ -34,11 +40,6 @@ struct Residual
         else
             curRawImageGray = frame.RawImage.clone();
 
-//        imshow("frame.RawImage", frame.RawImage);
-//        waitKey(0);
-//        imshow("curRawImageGray", curRawImageGray);
-//        waitKey(0);
-
         curFrame = frame;
         curFrame.Dx = frame.Dx.clone();
         curFrame.Dy = frame.Dy.clone();
@@ -52,13 +53,25 @@ struct Residual
             preFrame.Dy = curFrame.Dy.clone();
             preRawImageGray = curRawImageGray.clone();
             firstFlag = false;
-            frame.rsd = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.spatialVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.dcMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.verticalVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.horizontalVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+            frame.temporalContinuityMap = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
+            frame.textureMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
             return;
         }
 
-        residual = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        spatialVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        dcMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        verticalVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        horizontalVarianceMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+        temporalContinuityMap = Mat::zeros(frame.Dx.rows, frame.Dx.cols, CV_32FC1);
+        textureMap = Mat::zeros(curRawImageGray.rows/dctGridStep, curRawImageGray.cols/dctGridStep, CV_32FC1);
+
         residualFrame = Mat::zeros(preRawImageGray.rows, preRawImageGray.cols, CV_32FC1);
 
+        // Residual frame
         for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
         {
             for(int blk_i = 0; blk_i < preFrame.Dy.cols; ++blk_i)
@@ -79,6 +92,7 @@ struct Residual
             }
         }
 
+        // DCT coefficients
         for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
         {
             for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
@@ -100,15 +114,118 @@ struct Residual
             }
         }
 
+        // spatial variance
         for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
         {
             for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
             {
-                residual.at<float>(blk_j, blk_i) = residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+0);
+                float sum = 0;
+                for(int j = 1; j < dctGridStep; ++j)
+                    for(int i = 1; i < dctGridStep; ++i)
+                        sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                spatialVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep*dctGridStep);
             }
         }
 
-        frame.rsd = residual.clone();
+        // dc
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+            {
+                dcMap.at<float>(blk_j, blk_i) = residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+0);
+            }
+        }
+
+        // vertical variance
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+            {
+                float sum = 0;
+                for(int j = 1; j < dctGridStep; ++j)
+                    sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+0);
+                verticalVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
+            }
+        }
+
+        // horizontal variance
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+            {
+                float sum = 0;
+                for(int i = 1; i < dctGridStep; ++i)
+                    sum += residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+i);
+                horizontalVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
+            }
+        }
+
+        // temporal continuity
+        for(int blk_j = 0; blk_j < preFrame.Dx.rows; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < preFrame.Dy.cols; ++blk_i)
+            {
+                int zeroNum = 0;
+                for(int j = 0; j < gridStep; ++j)
+                {
+                    for(int i = 0; i < gridStep; ++i)
+                    {
+                        if(residualFrame.at<float>(blk_j*gridStep+j, blk_i*gridStep+i) == 0)
+                        {
+                            ++zeroNum;
+                        }
+                    }
+                }
+                temporalContinuityMap.at<float>(blk_j, blk_i) = (float(zeroNum))/(float(gridStep*gridStep));
+            }
+        }
+
+        // texture
+        for(int blk_j = 0; blk_j < curRawImageGray.rows/dctGridStep; ++blk_j)
+        {
+            for(int blk_i = 0; blk_i < curRawImageGray.cols/dctGridStep; ++blk_i)
+            {
+                float sum = 0;
+                for(int j = 0; j < 4; ++j)
+                {
+                    switch(j)
+                    {
+                        case 0:
+                        {
+                            for(int i = 1; i < 4; ++i)
+                                sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                            break;
+                        }
+                        case 1:
+                        {
+                            for(int i = 0; i < 3; ++i)
+                                sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                            break;
+                        }
+                        case 2:
+                        {
+                            for(int i = 0; i < 2; ++i)
+                                sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                            break;
+                        }
+                        case 3:
+                        {
+                            for(int i = 0; i < 1; ++i)
+                                sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                            break;
+                        }
+                    }
+                }
+                textureMap.at<float>(blk_j, blk_i) = sum/ac_topleft_num;
+            }
+        }
+
+        frame.spatialVarianceMap = spatialVarianceMap.clone();
+        frame.dcMap = dcMap.clone();
+        frame.verticalVarianceMap = verticalVarianceMap.clone();
+        frame.horizontalVarianceMap = horizontalVarianceMap.clone();
+        frame.temporalContinuityMap = temporalContinuityMap.clone();
+        frame.textureMap = textureMap.clone();
 
         preFrame = curFrame;
         preFrame.Dx = curFrame.Dx.clone();
@@ -123,12 +240,6 @@ struct Residual
         {
             for(int i = 0; i < src.cols; ++i)
             {
-//                if(src.at<float>(j, i) < 2.0)
-//                    dst.at<u_int8_t>(j, i) = 0;
-//                else if(src.at<float>(j, i) > 127.0)
-//                    dst.at<u_int8_t>(j, i) = 127;
-//                else
-//                    dst.at<u_int8_t>(j, i) = int16_t(src.at<float>(j, i));
                 dst.at<float>(j, i) = round(src.at<float>(j, i));
             }
         }

@@ -18,7 +18,12 @@ struct Frame
 {
 	Mat_<float> Dx, WarpDx;
 	Mat_<float> Dy, WarpDy;
-    Mat rsd;    // residual
+    Mat spatialVarianceMap;
+    Mat dcMap;
+    Mat verticalVarianceMap;
+    Mat horizontalVarianceMap;
+    Mat temporalContinuityMap;
+    Mat textureMap;
 	Mat_<bool> Missing;
 	Mat RawImage;
 	int FrameIndex;
@@ -47,7 +52,7 @@ struct Frame
 			TIMERS.InterpolationHOFMBH.Start();
 			Dx = InterpolateFrom16to8(Dx, afterInterpolation, fscale);
 			Dy = InterpolateFrom16to8(Dy, afterInterpolation, fscale);
-//            rsd = InterpolateFrom16to8(rsd, afterInterpolation, fscale);
+            temporalContinuityMap = InterpolateFrom16to8(temporalContinuityMap, afterInterpolation, fscale);
 
 			if(!WarpDx.empty() && !WarpDy.empty())
 			{
