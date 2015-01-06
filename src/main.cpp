@@ -60,8 +60,11 @@ int main(int argc, char* argv[])
     FrameReader rdr(opts.VideoPath, hogInfo.enabled);
 	TIMERS.Reading.Stop();
 
-    VideoCapture videoCapture(opts.VideoPath);
-    Mat cap;
+//    VideoCapture videoCapture(opts.VideoPath);
+//    Mat cap;
+//    int frameNum = int(videoCapture.get(CV_CAP_PROP_FRAME_COUNT));
+//    frameNum -= 3;
+//    int frameIndex = 1;
 
 	Size frameSizeAfterInterpolation = 
 		opts.Interpolation
@@ -85,11 +88,14 @@ int main(int argc, char* argv[])
 	TIMERS.Everything.Start();
 	while(true)
 	{
+//        if(frameIndex > frameNum)
+//            break;
         Frame frame = rdr.Read();
-        videoCapture.operator >>(cap);
-        if(frame.PTS == -1 || cap.empty())
+//        videoCapture.operator >>(cap);
+        if(frame.PTS == -1 /*|| cap.empty()*/)
 			break;
-        frame.RawImage = cap.clone();
+//        frame.RawImage = cap.clone();
+//        ++frameIndex;
 
 		log("#read frame pts=%d, mvs=%s, type=%c", frame.PTS, frame.NoMotionVectors ? "no" : "yes", frame.PictType);
 
