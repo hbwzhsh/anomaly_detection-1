@@ -103,24 +103,15 @@ struct Options
 
 	void SetDefaults()
 	{
-//        HogEnabled = true;
-//        HofEnabled = true;
-//        MbhEnabled = true;
-//        SpatialVarianceEnabled = true;
-//        DcEnabled = true;
-//        VerticalVarianceEnabled = true;
-//        HorizontalVarianceEnabled = true;
-//        TemporalContinuityEnabled = true;
-//        TextureEnabled = true;
-        HogEnabled = false;
-        HofEnabled = false;
-        MbhEnabled = false;
-        SpatialVarianceEnabled = false;
-        DcEnabled = false;
-        VerticalVarianceEnabled = false;
-        HorizontalVarianceEnabled = false;
-        TemporalContinuityEnabled = false;
-        TextureEnabled = false;
+        HogEnabled = true;
+        HofEnabled = true;
+        MbhEnabled = true;
+        SpatialVarianceEnabled = true;
+        DcEnabled = true;
+        VerticalVarianceEnabled = true;
+        HorizontalVarianceEnabled = true;
+        TemporalContinuityEnabled = true;
+        TextureEnabled = true;
 
 		Dense = false;
         Interpolation = true;
