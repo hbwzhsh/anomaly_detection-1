@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     DescInfo textureInfo(8, false, nt_cell, opts.TextureEnabled);
 
 	TIMERS.Reading.Start();
-    FrameReader rdr(opts.VideoPath, hogInfo.enabled);
+    FrameReader rdr(opts.VideoPath, true);
 	TIMERS.Reading.Stop();
 
 //    VideoCapture videoCapture(opts.VideoPath);
@@ -97,8 +97,8 @@ int main(int argc, char* argv[])
 //        frame.RawImage = cap.clone();
 //        ++frameIndex;
 
-        imshow("", frame.RawImage);
-        waitKey(10);
+//        imshow("", frame.RawImage);
+//        waitKey(10);
 
 		log("#read frame pts=%d, mvs=%s, type=%c", frame.PTS, frame.NoMotionVectors ? "no" : "yes", frame.PictType);
 

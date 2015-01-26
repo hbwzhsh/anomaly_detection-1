@@ -122,7 +122,7 @@ struct Residual
                 float sum = 0;
                 for(int j = 1; j < dctGridStep; ++j)
                     for(int i = 1; i < dctGridStep; ++i)
-                        sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i);
+                        sum += abs(residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+i));
                 spatialVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep*dctGridStep);
             }
         }
@@ -143,7 +143,7 @@ struct Residual
             {
                 float sum = 0;
                 for(int j = 1; j < dctGridStep; ++j)
-                    sum += residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+0);
+                    sum += abs(residualFrame.at<float>(blk_j*dctGridStep+j, blk_i*dctGridStep+0));
                 verticalVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
             }
         }
@@ -155,7 +155,7 @@ struct Residual
             {
                 float sum = 0;
                 for(int i = 1; i < dctGridStep; ++i)
-                    sum += residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+i);
+                    sum += abs(residualFrame.at<float>(blk_j*dctGridStep+0, blk_i*dctGridStep+i));
                 horizontalVarianceMap.at<float>(blk_j, blk_i) = sum/(dctGridStep-1);
             }
         }
